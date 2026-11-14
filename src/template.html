@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MSFS Airport Scout — Routen &amp; Challenges</title>
+<meta name="generator" content="MakeRwys 5.132 + OurAirports + Natural Earth">
+<style>
+:root{--bg:#0b1016;--pan:#131b24;--pan2:#0f151d;--tx:#c9d4de;--dim:#7f8b96;--acc:#4aa3ff;--red:#ff3b3b;--cy:#39d0d8;--yl:#ffd23b;}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--tx);font:12px/1.35 system-ui,Segoe UI,sans-serif;margin:0;padding:8px}
+h1{font-size:14px;margin:0 0 6px}
+.mOnly{display:none}   /* nur mobil sichtbar (Klappen-Steuerung) */
+#wrap{max-width:1700px;margin:0 auto}
+.panel{background:var(--pan);border:1px solid #223042;border-radius:6px;padding:8px;margin-bottom:8px}
+.frow{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.frow label{display:flex;align-items:center;gap:4px;color:var(--dim);white-space:nowrap}
+input,select,button{background:var(--pan2);color:var(--tx);border:1px solid #2a3a4e;border-radius:4px;padding:2px 6px;font:inherit}
+input[type=checkbox]{accent-color:var(--acc)}
+input[type=number]{width:64px}
+input[type=text]{width:110px}
+button{cursor:pointer}
+button.acc{background:#173049;border-color:#2a4f77}
+.small{font-size:11px;color:var(--dim)}
+#acInfo{margin-left:4px}
+#listWrap{height:40vh;overflow-y:auto;border:1px solid #223042;border-radius:4px;background:var(--pan2)}
+table{border-collapse:collapse;width:100%}
+th{position:sticky;top:0;background:#182230;color:var(--tx);text-align:left;padding:3px 6px;cursor:pointer;border-bottom:1px solid #2a3a4e;user-select:none;white-space:nowrap}
+th:hover{background:#20344a}
+td{padding:2px 6px;border-bottom:1px solid #16202c;white-space:nowrap}
+tr:hover td{background:#16222f}
+tr.sel td{background:#1c3040}
+.warnRwy{background:#5a1a1a;color:#ff9d9d}
+.kat2 td:first-child{box-shadow:inset 3px 0 0 #4aa3ff}
+.kat3 td:first-child{box-shadow:inset 3px 0 0 #3ddc84}
+#mapPanel{position:relative}
+#map{width:100%;display:block;border-radius:4px;background:#0a0f16;cursor:crosshair;touch-action:none}
+#tip{position:absolute;pointer-events:none;background:#0d141cf0;border:1px solid #2a3a4e;padding:3px 7px;border-radius:4px;display:none;z-index:5;font-size:11px}
+#tip .tl{margin:1px 0}
+#tip .yes{color:#3ddc84}
+#tip .no{color:#ff6b6b}
+#legend{display:flex;gap:14px;flex-wrap:wrap;padding:5px 2px 0;color:var(--dim);font-size:11px;align-items:center}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--red);vertical-align:middle}
+.ring{display:inline-block;width:9px;height:9px;border-radius:50%;border:1.5px solid var(--cy);vertical-align:middle}
+.tri{color:var(--yl);font-size:9px}
+#detail{display:none;margin-top:8px;border-top:1px solid #223042;padding-top:8px}
+#detail .rwtab td,#detail .rwtab th{padding:1px 8px}
+#detail h3{margin:0 0 4px;font-size:13px}
+#detail h4{margin:8px 0 3px;font-size:11px;color:var(--dim);text-transform:uppercase}
+.collapsible{display:none;margin-top:6px;border-top:1px dashed #223042;padding-top:6px}
+.open{display:block}
+#acTable input{width:90px}
+#pkgOut{color:var(--yl)}
+#bar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+#count{color:var(--dim)}
+#acFlagCol{white-space:nowrap}
+.mtn{color:var(--yl)}
+#filterPanel{position:sticky;top:0;z-index:20}
+#cols{display:grid;grid-template-columns:minmax(400px,620px) 1fr;column-gap:8px;align-items:start}
+#leftCol{display:flex;flex-direction:column;gap:8px;min-width:0}
+#leftCol>.panel{margin-bottom:0}
+#rightCol{position:sticky;top:8px;min-width:0}
+#rightCol>.panel{margin-bottom:0}
+#worldWrap{margin-top:4px;max-height:110px;overflow-y:auto;border:1px solid #223042;border-radius:4px;background:var(--pan2);padding:4px 8px}
+#routeWrap{max-height:220px;overflow-y:auto;border:1px solid #223042;border-radius:4px;background:var(--pan2)}
+#worldChain{line-height:1.8}
+#impIn,#flagIcao{background:var(--pan2);color:var(--tx);border:1px solid #2a3a4e;border-radius:4px;padding:2px 6px;font:inherit}
+#ctrySug{position:fixed;display:none;background:var(--pan);border:1px solid #2a3a4e;border-radius:4px;padding:3px;z-index:50;max-height:280px;overflow-y:auto;min-width:230px;box-shadow:0 6px 18px #000c}
+#ctrySug .ci{padding:3px 7px;border-radius:3px;cursor:pointer;white-space:nowrap}
+#ctrySug .ci:hover,#ctrySug .ci.act{background:#1c3040}
+#ctrySug .ci.have{opacity:.45}
+#ctrySug b{color:var(--acc)}
+@media (max-width:900px){
+  /* Layout-Grundsatz mobil: nichts läuft nach rechts aus — die Seite ist exakt bildschirmbreit, alles weitere scrollt nach unten.
+     Klickbare Informationsflächen (Panels) heben sich mit hellerem Grund und deutlichem Rand vom Seiten-Gerüst ab,
+     zwischen ihnen bleibt bewusst Platz als Grifffläche für den Daumen (Seite rauf/runter scrollen). */
+  #listWrap{height:55vh}   /* Ergebnisliste: groß genug, um darin zu arbeiten und separat zu scrollen */
+  #cols{display:flex;flex-direction:column;column-gap:0}   /* mobil: Karte zuerst */
+  #rightCol{order:-1;position:static}
+  .mOnly{display:inline-flex;align-items:center;gap:6px}
+  input,select,button{font-size:16px}   /* 16 px verhindert den iOS-Fokus-Zoom */
+  #wrap{padding:0 14px 24px}
+  .panel{background:#141e29;border-color:#2c405c;border-radius:10px;padding:10px;margin-bottom:14px}
+  #leftCol{gap:14px}
+  #routePanel{order:-1}   /* Route-Modus-Auswahl direkt unter der Karte, Liste darunter */
+  #routeWrap{max-height:40vh}
+  #worldWrap{max-height:150px}
+  #tab th,#tab td{padding:6px 7px}   /* Zeilen hoch genug für den Daumen */
+  #tab td{white-space:normal}   /* Name darf umbrechen — Tabelle bleibt bildschirmbreit, kein horizontales Scrollen */
+  #rmWrap{display:flex;flex-direction:column;align-items:stretch;gap:8px;margin-bottom:8px}
+  .rmBtn{padding:12px 6px;border-radius:8px;text-align:center;font-size:15px}
+  .rmBtn.act{background:#173049;border-color:var(--acc);color:#fff}
+  #detail h3{font-size:12px}
+  #detail h4{margin:6px 0 2px}
+  #detail .rwtab td,#detail .rwtab th{padding:1px 4px;white-space:nowrap}   /* Pistentabelle kompakt, kein Umbruch */
+}
+</style>
+</head>
+<body>
+<div id="wrap">
+<div class="panel" id="filterPanel">
+<div id="bar">
+  <h1>MSFS Airport Scout</h1>
+  <button id="fToggle" class="small mOnly" title="Filter zeigen/verbergen — mobil einmal setzen, dann zuklappen">☰ Filter</button>
+  <div id="count"></div>
+</div>
+<div id="frows">
+<div class="frow">
+  <label>Suche <input type="text" id="q" placeholder="ICAO/Name/IATA"></label>
+  <label>Kontinent <select id="cont"><option value="">alle</option><option value="EU">Europa</option><option value="AS">Asien</option><option value="AF">Afrika</option><option value="NA">Nordamerika</option><option value="SA">Südamerika</option><option value="OC">Ozeanien</option><option value="AN">Antarktika</option></select></label>
+  <label>Land <input type="text" id="ctry" placeholder="DE,US,.." style="width:52px"></label>
+  <label>RWY ≥ <input type="text" id="rwyMin" placeholder="ft" style="width:60px"> ft</label>
+  <label>RWY ≤ <input type="text" id="rwyMax" placeholder="ft" style="width:60px"> ft</label>
+  <label>Surface
+    <select id="surf">
+      <option value="-1">alle</option><option value="P">paved</option><option value="6">Gravel</option>
+      <option value="7">Dirt</option><option value="8">Grass</option><option value="9">Sand</option><option value="13">Water</option>
+    </select></label>
+  <label>Procedures
+    <select id="fProc">
+      <option value="any">ILS o. RNAV</option>
+      <option value="ils">ILS</option>
+      <option value="rnav">RNAV</option>
+      <option value="none">none</option>
+      <option value="all">alle</option>
+    </select></label>
+  <label>▲ min
+    <select id="fMtnMin">
+      <option value="0">aus</option>
+      <option value="1">1 · Hügel</option>
+      <option value="2">2 · Berg</option>
+      <option value="3">3 · Hochgebirge</option>
+    </select></label>
+  <label><input type="checkbox" id="fTwr"> TWR</label>
+  <label><input type="checkbox" id="fPapi"> PAPI</label>
+  <label><input type="checkbox" id="fAtis"> ATIS</label>
+  <label><input type="checkbox" id="fSched"> Linienverkehr</label>
+  <label>Gates ≥ <input type="number" id="gatesMin" placeholder="0" style="width:44px"></label>
+  <label title="Flughistorie auf der Karte ein-/ausblenden (Import über ✈ Historie)" style="margin-left:auto;color:var(--tx)"><input type="checkbox" id="histShow" checked> ✈</label>
+  <button id="precipBtn" class="small" title="Regenbild (NASA GPM IMERG, Surface Precipitation Rate) einmalig laden: zeigt, wo Regen fällt — grün = leicht, gelb/rot = stark, regenfreie Gebiete bleiben transparent. Hat der aktuelle Tag noch keine Daten, wird automatisch bis zu 5 Tage zurückgegriffen. Erneuter Klick: entfernen — wiederholen: neu laden. Kein Auto-Update.">☂</button>
+  <button id="windBtn" class="small" title="Wind/Jetstream auf Flughöhe (250 hPa ≈ FL340, Open-Meteo GFS) einmalig laden — farbcodierte Pfeile, gelb/rot = Jetkern. Erneuter Klick: entfernen. Kein Auto-Update.">➤</button>
+</div>
+<div class="frow">
+  <label>Kat:
+    <span style="display:inline-flex;gap:6px">
+      <label><input type="checkbox" class="fcat" value="0" checked> AI Generated</label>
+      <label><input type="checkbox" class="fcat" value="2" checked> Asobo</label>
+      <label><input type="checkbox" class="fcat" value="3" checked> 3rd-Party</label>
+    </span></label>
+  <span id="catHint" class="small" style="color:#ffd23b" title="Kategorien kommen aus dem MakeRwys-Scan — 💾 Export am PC → 📦 Import mobil überträgt die Klassifizierung"></span>
+  <label>Flugzeug <select id="acSel"></select></label>
+  <span id="acInfo" class="small"></span>
+  <button id="acEdit" class="small">✎ Aircraft</button>
+  <button id="resetBtn" class="small">⟲ Filter zurücksetzen</button>
+  <button id="pkgBtn" class="small">📦 Packages</button>
+  <button id="histBtn" class="small">✈ Historie</button>
+  <button id="helpBtn" class="small">? Hilfe &amp; Daten</button>
+  <span class="small" id="dbShort">Datenbasis: MakeRwys-Scan + OurAirports · Höhen: Terrarium/ETOPO</span>
+</div>
+</div>
+<div id="pkgPanel" class="collapsible">
+  <div class="small">Ordnerliste deiner Packages einfügen (je Zeile ein Ordnername aus <code>Official\OneStore</code> und <code>Community</code>; Windows: <code>dir /b</code> im Packages-Ordner). Tool markiert dann Asobo- und 3rd-Party-Flughäfen exakt — auch jene, deren Daten von Navigraph überdeckt werden.</div>
+  <textarea id="pkgIn" rows="4" style="width:100%;margin-top:4px;background:var(--pan2);color:var(--tx);border:1px solid #2a3a4e"></textarea>
+  <div style="margin-top:4px"><button id="pkgGo" class="acc">Einlesen</button> <button id="pkgClr" class="small">Entfernen</button> <span id="pkgOut" class="small"></span></div>
+</div>
+<div id="histPanel" class="collapsible">
+  <div class="small">Flughistorie aus MSFS importieren. FlightLog-Analyzer-CSV wird spaltengenau gelesen (Origination/Destination-Spalten der Kopfzeile) — SID/STAR-, Pisten- und Livery-Texte stören nicht. Andere Formate: einfache Textdatei mit <code>EDDM,KJFK</code> je Zeile — gelesen werden die ICAO-Kürzel pro Zeile, erste + letzte ergeben den Flug. Geflogene Häfen und Verbindungen erscheinen violett auf der Karte, geflogene Etappen der aktiven Route bekommen eine dicke violette Unterlage unter dem Gelb. Neuer Export = einfach erneut einlesen (ersetzt).</div>
+  <input type="file" id="histFile" accept=".csv,.txt,.xml,.kml" style="margin-top:4px;color:var(--tx)">
+  <div style="margin-top:4px"><button id="histClr" class="small">Entfernen</button> <span id="histOut" class="small"></span></div>
+</div>
+<div id="acPanel" class="collapsible">
+  <table id="acTable" class="small"><thead><tr><th></th><th>Flugzeug</th><th>Landing mind. (ft)</th><th>Takeoff mind. (ft)</th><th title="True Airspeed in Reiseflughöhe — nicht KIAS: IAS liegt in Höhe niedriger (Faustregel ~2 % pro 1000 ft)">Cruise KTAS</th><th>SimBrief-Type</th><th></th></tr></thead><tbody></tbody></table>
+  <div style="margin-top:4px"><button id="acSave" class="acc">Speichern</button> <button id="acAdd" class="small">＋ Eintrag</button> <span class="small">Schätzwerte — anpassen. ＋ = eigenen Flugzeug-Typ anlegen, ✕ in der Zeile entfernt ihn. Rotmarkierung = Piste kürzer als Landing-Minimum, Airport bleibt in der Liste.</span></div>
+</div>
+<div id="helpPanel" class="collapsible">
+  <div class="small" style="line-height:1.5">
+    <div>Datenbasis: MakeRwys-Scan deiner Installation (36.779 Plätze mit Pisten), OurAirports (Namen/Länder), Höhenuntergrund Terrarium/ETOPO (AWS Open Data) — komplett offline. Kategorien: AI Generated = visuell Basislandschaft, auch Navigraph-überdeckte Plätze zählen dazu, bis der Packages-Import sie hochstuft.</div>
+    <div style="margin-top:4px">Flugzeit-Modell: Cruise-Tempo pro Flugzeug (Aircraft-Editor, als KTAS — True Airspeed in Reiseflughöhe, nicht KIAS), Climb/Descent-Overhead 0,35 h / 140 km, dazu pauschal +10 % auf die reine Flugzeit (SimBrief-Routen liegen durch echte Wegpunkte/Procedures erfahrungsgemäß ~10 % über der Direktdistanz) und +15 min Cold-&-Dark-Startup. Routen live mit ~0,3 s Debounce, Grundmenge = Airport-Filter. Paar-Modus: beide Enden im Filter, max. 8000 Plätze. Weltumrundung: Ø-Etappe = Dauer-Eingabe ± Toleranz; Etappen darüber (bis 1,9× Band) sind erlaubt und werden als überlange Ausnahmen gezählt und ausgewiesen; Zufallsauswahl — Reroll wechselt die Route. Schlussflug zum Start, sobald der Start in Reichweite liegt — die Route überholt den Startmeridian nicht mehr. Länder-Meiden: Comma-Liste von Ländercodes (z.B. RU,CN) — gemiedene Länder werden umgangen, höchstens 1 Etappe je Land als Lückenhüpfer (auch Kategorie-Bonus bleibt wirksam); wird die Route undurchführbar, endet sie mit „Abbruch bei Lücke" — dann Liste kürzen.</div>
+    <div style="margin-top:4px">Länder-Eingabe (Land-Filter und Meiden): Landesnamen eintippen — deutsch oder englisch (z. B. „deutschland", „lux", „irish", „russia") — die Vorschlagsliste zeigt passende Länder mit Platzanzahl in der Datenbank. Übernehmen per Klick oder Pfeiltasten + Enter; der 2-Buchstaben-Code wird an die bestehende Liste angefügt (z. B. „uk,it," + Deutschland → „uk,it,DE,"). Die Liste bleibt offen, solange du im Feld arbeitest, zeigt ohne Vorgabe die häufigsten Länder und markiert bereits gewählte gedimmt; nach jeder Übernahme kannst du sofort das nächste anklicken. Esc schließt die Liste. Ländernamen werden auch direkt verstanden: „deutschland" im Land-Feld filtert sofort DE, „russia" im Meiden-Feld meidet RU. Nicht eindeutige oder unbekannte Eingaben wirken wie bisher als Code und werden bei leerer Trefferliste als „Unbekanntes Land" benannt.</div>
+    <div style="margin-top:4px">Weltumrundung/Reroll: Reroll überspringt unvollständige Versuche (Abbruch bei Lücke, kein Schlussflug) automatisch und zeigt die nächste komplette Umrundung. Roll# zählt die kompletten Routen der aktuellen Einstellung (Hover über Roll# zeigt die Versuche) — die Gesamtzahl möglicher Routen ist nicht berechenbar, der Zähler nummeriert die gefundenen.</div>
+    <div style="margin-top:4px">Karte: schwarze Linien = Ländergrenzen — bildschirm-konstant fein (~1,1 px) in jeder Zoomstufe, dickt beim Reinzoomen nicht auf und wird beim Rauszoomen keine Haarlinie; durchgehend hochauflösend aus Natural Earth 10 m mit voller Koordinatenpräzision, Deutschlands Grenzen sind komplett. Blaue Flächen = Seen zur Orientierung (Natural Earth + kuratiert: Gardasee, Bodensee, Genfer See, Como, Zürichsee, Starnberger See, Ammersee, Kochelsee, Walchensee, Chiemsee, Tegernsee) mit dezenten Umrissen, die beim Reinzoomen fein bleiben.</div>
+    <div style="margin-top:4px">Wetter-Layer (nur online, rein manueller Import — kein Auto-Update): ☂ lädt das Regenbild (NASA GPM IMERG, Surface Precipitation Rate) und zeigt, wo Regen fällt — grün = leicht, gelb = kräftig, rot = Starkregen; regenfreie Gebiete bleiben transparent, hat der aktuelle Tag noch keine Daten, wird automatisch bis zu 5 Tage zurückgegriffen. Erneuter Klick entfernt es, wiederholter Klick lädt neu. ➤ lädt Wind/Jetstream auf Flughöhe (250 hPa ≈ FL340, Open-Meteo GFS, 396-Punkte-Gitter) als farbcodierte Pfeile — Farbcodierung in der Legende unter der Karte, gelb/rot = Jetkern; ab Zoom 18× verdoppelt sich die Pfeildichte je Richtung (2×2 je Gitterzelle, aus denselben Messdaten interpoliert) — vier Pfeile, wo vorher einer war, und zwar konstant, unabhängig davon, wie weit du reinzoomst. Beide Layer zeigen, ob eine Route wettermäßig interessant wird oder herausfällt.</div>
+    <div style="margin-top:4px">Route-Filter (nur im Paar- und Ab-Start-Modus, wirken ausschließlich auf Routenliste und Routenlinien — Karte-Punkte und Airport-Ergebnisliste bleiben unverändert): HQ-Route — eine Verbindung braucht mindestens einen hochwertigen Flughafen (blau = Asobo, grün = 3rd-Party); im Ab-Start-Modus muss das Ziel hochwertig sein, von blauem Start (Asobo) gehen nur grüne Ziele (3rd-Party) — so landest du nie auf reinem AI-Gelände. Mind. 1× (ILS, Verf., TWR, ATIS, PAPI — kombinierbar): mindestens ein Flughafen der Verbindung muss alle aktivierten Features haben, und zwar derselbe Flughafen — ILS/PAPI & Co. zählen für die Landung am Ziel, Features am anderen Ende helfen dir nicht. So kannst du im Airport-Filter auch verfahrenslose Häfen drinlassen und trotzdem gezielt ILS-Anflüge finden. Beide Filter speichern mit und sind Teil des Daten-Exports; die gefilterte Anzahl steht in der blauen Routen-Infozeile.</div>
+    <div style="margin-top:4px">Details: Zeile 1 fasst alles zusammen — ICAO/IATA, Name, Land mit Flagge (Leerzeichen dahinter), Pistenlänge (ft, fett) mit Surface als Wort dahinter (weiß = paved, gelb = unbefestigt), Linienverkehr als Wort; rechts außen die farbcodierte Kategorie (● AI Generated rot, ● Asobo blau, ● 3rd-Party grün) mit Package-Symbol (▣ = Werksscan, ⇩ = importiert). Zeile 2 = farbige Flags (grün = vorhanden, rot = fehlt): ILS, RNAV, ATIS, TWR, PAPI, dazu ▲-Bergigkeit. Die Pistentabelle zeigt mobil nur die Kernspalten (Piste, ft, Hdg, ILS, PAPI), am PC alle. Das Karten-Mouseover zeigt ATIS jetzt wie ILS/RNAV/Tower in Grün/Rot. Die Mtn-Spalte der Airport-Liste und die ▲A/▲B-Spalten der Routenliste sind konsistent zur Karte gefärbt: 0/1 = weiß, 2 = gelb, 3 = rot.</div>
+    <div style="margin-top:4px">Mobil (iPhone/iPad): ☰ Filter klappt die Airport-Eingaben zu — einmal setzen, dann zuklappen. Direkt unter der Karte steht die Route-Modus-Auswahl (✈ Aus · ➤ Ab Start · ⇄ Paare · 🌐 Welt) — erst den Modus antippen, darunter erscheinen nur die Felder dieses Modus, alles was die anderen Modi brauchen, ist komplett ausgeblendet. Die Karte ist die Primärsteuerung: 1 Finger schiebt, 2 Finger Pinch-Zoom (um den Finger-Mittelpunkt), Tippen wählt den nächsten Airport (Tap-Radius finger-gerecht), die Details erscheinen unter der Karte. Darunter folgen Route-Status/Routenliste, ganz unten der große Ergebnis-Bereich mit der Airport-Liste — Kernspalten (ICAO, Name, RWY, Bergigkeit, ILS, RNAV), Name bricht um, nichts läuft nach rechts aus dem Bildschirm; die restlichen Spalten stehen im Detail-Panel. Die Seite scrollt nur nach unten: Die Panels (Karte, Route, Liste) heben sich farblich vom Seitenrand ab, die Streifen dazwischen sind bewusst breite Griffflächen für den Daumen. Kein Hover — alle Infos stehen im Detail-Panel. Beim ersten Laden einmal komplett laden lassen, danach läuft die Seite offline aus dem Safari-Cache (nur die Wetter-Layer brauchen Netz).</div>
+    <div style="margin-top:4px">Karte: Mausrad = Zoom, Ziehen = Verschieben (horizontal unbegrenzt — der Globus wiederholt sich am Längen-180°-Rand), Doppelklick = rein. Klick auf Zeile = Auswahl + Karte zoomt, Klick auf Punkt = Auswahl + Liste springt, Routenzeile = Route gelb fokussiert, Airports der aktiven Route tragen einen weißen Ring. Ab Zoom 23× ICAO-Label, ab 30× Pistenrichtungs-Symbole und Berg-Markierung (Berg gelb, Hochgebirge rot — Hügel nur in den Daten, nicht als Symbol). Schalter oben links in der Karte blendet alle Häfen außerhalb der aktiven Route aus (nur Anzeige, Listen unverändert). Procedures nicht im BGL-Scan: ILS/TWR/ATIS/Gates hart, RNAV heuristisch (Flag einmalig im Datenbestand, Spalte direkt neben ILS). Procedures-Filter: ILS o. RNAV = mindestens ein Verfahren vorhanden (verfahrenslose Häfen nur unter „none“ sichtbar, „alle“ = kein Filter). Routenliste: Spaltenkopf-Klick sortiert auf-/absteigend; Balken vor dem Ziel-ICAO = Asobo (blau) bzw. 3rd-Party (grün) als Ziel, ✓ violett = Verbindung bereits geflogen — beide Marker sitzen in einer eigenen schmalen Spalte, die Ziel-ICAO bleibt in der Spaltenlinie. 💾 neben Dauer/± speichert die Vorgaben pro Route-Modus (Route und Weltumrundung getrennt) und ist Teil des Daten-Exports. Flughistorie: ✈ Historie-Button — CSV/TXT deines MSFS-Logbuchs einlesen (FlightLog Analyzer CSV wird spaltengenau über die Origination/Destination-Kopfzeile gelesen — SID/STAR-, Pisten- und Livery-Texte stören nicht; einfache Listen „EDDM,KJFK" je Zeile laufen über ICAO-Token); geflogene Häfen + Verbindungen violett auf der Karte, geflogene Etappe der aktiven Route dicke violette Unterlage, unbekannte ICAOs werden übersprungen und gezählt. Neuer Export = erneut einlesen (ersetzt). Weight-Limits existieren in MSFS-Daten nicht. Bergig-Levels aus dem Höhenraster (max. Geländehöhe im Umkreis).</div>
+  </div>
+  <h4 style="margin:8px 0 3px;font-size:11px;color:var(--dim);text-transform:uppercase">Daten sichern / übertragen</h4>
+  <div class="frow">
+    <button id="expBtn" class="acc small">Daten exportieren (TXT)</button>
+    <button id="impBtn" class="small">Import anwenden</button> <button id="impFileBtn" class="small" title="Exportierte Datendatei (msfs_scout_daten.txt) direkt als Datei importieren — wie ein Savegame">Datei importieren</button><input type="file" id="impFile" accept=".txt,.json" style="display:none">
+    <span id="impOut" class="small"></span>
+  </div>
+  <textarea id="impIn" rows="4" style="width:100%;margin-top:4px" placeholder="Exportierten Datenbestand hier einfügen (Packages-Kategorien, SimBrief-Profil, Flugzeuge) — dann Import anwenden."></textarea>
+  <h4 style="margin:8px 0 3px;font-size:11px;color:var(--dim);text-transform:uppercase">Airport manuell umflaggen</h4>
+  <div class="frow">
+    <label>ICAO <input type="text" id="flagIcao" style="width:64px"></label>
+    <label>Kategorie <select id="flagCat"><option value="0">AI Generated</option><option value="2">Asobo</option><option value="3">3rd-Party</option><option value="4">AI Prio</option><option value="-1">Werkseinstellung (Scan)</option></select></label>
+    <button id="flagGo" class="acc small">Setzen</button>
+    <span id="flagOut" class="small"></span>
+  </div>
+  <div class="small" style="margin-top:3px">Setzen überschreibt die Kategorie dieses einen Platzes dauerhaft (auch ohne neuen Packages-Import) — z.B. nach Kauf eines Airports in der Marketplace. Werkseinstellung entfernt die Überschreibung. AI Prio: Anzeige bleibt rot wie AI Generated, aber die Weltumrundung behandelt den Platz wie einen Asobo-Hafen (Kategorie-Filter und Etappen-Bonus) — zum Schließen von Lücken im Welt-Modus, ohne den Platz visuell hochzustufen. In den anderen Route-Modi gilt er als normaler AI-Flughafen.</div>
+</div>
+</div>
+
+<div id="cols">
+<div id="leftCol">
+<div class="panel">
+<div id="listLbl" class="mOnly" style="margin:0 0 8px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;font-size:11px">Ergebnisse</div>
+<div id="listWrap"><table id="tab"><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+</div>
+
+<div class="panel" id="routePanel">
+  <div id="rmWrap" class="mOnly">
+    <div class="rmBtns" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button id="rmOff" class="rmBtn" data-m="off" title="Keine Route — nur Filter, Karte und Airport-Liste">✈ Aus</button>
+      <button id="rmFrom" class="rmBtn" data-m="from" title="Route ab einem Start-Flughafen (Ziele im Dauer-Band)">➤ Ab Start</button>
+      <button id="rmPairs" class="rmBtn" data-m="pairs" title="Alle Routenpaare aus der gefilterten Airport-Menge">⇄ Paare</button>
+      <button id="rmWorld" class="rmBtn" data-m="world" title="Weltumrundung in Etappen">🌐 Welt</button>
+    </div>
+    <span id="routeInfoM" class="small" style="color:var(--acc)"></span>
+  </div>
+  <div id="rctl">
+  <div class="frow">
+    <h1 style="margin:0 16px 0 0">Routen</h1>
+    <label>Modus <select id="routeMode">
+      <option value="off">aus</option>
+      <option value="from">ab Start</option>
+      <option value="pairs">Paare aus Filtermenge</option>
+      <option value="world">Weltumrundung</option>
+    </select></label>
+    <label id="rOrigLbl" style="display:none">Start <input type="text" id="rOrig" placeholder="ICAO" style="width:64px"></label>
+    <label id="wDirLbl" style="display:none">Richtung <select id="wDir"><option value="east">Ost</option><option value="west">West</option></select></label>
+    <label id="wAvoidLbl" style="display:none">Meiden <input type="text" id="wAvoid" placeholder="z.B. RU,CN" style="width:100px"></label>
+    <label><span id="rDurLbl">Dauer</span> <input type="text" id="rDur" value="1.5" style="width:52px"> h</label>
+    <label>± <input type="text" id="rTol" value="15" style="width:40px"> min</label>
+    <button id="rtSave" class="small" title="Dauer/Toleranz für diesen Route-Modus speichern (Teil des Daten-Exports)">💾</button>
+    <button id="sbBtn" class="acc small" style="display:none">→ SimBrief</button>
+    <button id="wRoll" class="small" style="display:none">↻ Reroll</button>
+    <span id="wRollN" class="small" style="display:none"></span>
+    <button id="wExp" class="small" style="display:none">TXT exportieren</button>
+    <button id="sbProfBtn" class="small">SimBrief-Profil</button>
+    <span id="routeInfo" class="small" style="color:var(--acc);white-space:nowrap"></span>   <!-- nie mehrzeilig: SimBrief-Button passt davor, alles in 1 Zeile -->
+    <span id="rtFilterWrap" style="display:none;align-items:center;gap:10px;white-space:nowrap">
+      <label title="HQ-Route: nur Verbindungen mit hochwertigem Flughafen (blau = Asobo, grün = 3rd-Party). Paar-Modus: mindestens ein Ende hochwertig. Ab Start: das Ziel muss hochwertig sein — von blauem Start (Asobo) gehen nur grüne Ziele (3rd-Party). Wirkt nur auf Routenliste und Routenlinien, nicht auf Karte-Punkte oder Airport-Ergebnisliste."><input type="checkbox" id="rfHQ"> HQ-Route</label>
+      <label title="Route-Filter: die Verbindung muss mindestens einen Flughafen haben, der ALLE aktivierten Features besitzt — derselbe Flughafen (ILS/PAPI & Co. sind für die Landung am Ziel nötig, Features am anderen Ende zählen nicht). Wirkt nur auf Routenliste und Routenlinien, nicht auf Karte-Punkte oder Airport-Ergebnisliste.">mind. 1×
+        <input type="checkbox" id="rfILS" title="mindestens ein Flughafen der Verbindung hat ILS"> ILS
+        <input type="checkbox" id="rfProc" title="mindestens ein Flughafen der Verbindung hat ILS oder RNAV (Verfahren)"> Verf.
+        <input type="checkbox" id="rfTWR" title="mindestens ein Flughafen der Verbindung hat Tower"> TWR
+        <input type="checkbox" id="rfATIS" title="mindestens ein Flughafen der Verbindung hat ATIS"> ATIS
+        <input type="checkbox" id="rfPAPI" title="mindestens ein Flughafen der Verbindung hat PAPI"> PAPI</label>
+    </span>
+  </div>
+  </div>
+  <div id="sbPanel" class="collapsible">
+    <div class="frow">
+      <label>Airline ICAO <input type="text" id="sbAirline" style="width:52px"></label>
+      <label>ATC Callsign <input type="text" id="sbCallsign" style="width:76px"></label>
+      <label>Flugnummer <select id="sbFltMode"><option value="auto">fortlaufend</option><option value="fix">fest</option></select> <input type="text" id="sbFltNum" style="width:52px"></label>
+      <label id="sbNextLbl">Nächste FlNr <input type="text" id="sbNextNum" style="width:52px"></label>
+      <label>Passagiere <select id="sbPaxMode"><option value="auto">auto</option><option value="none">none (0)</option><option value="fix">Zahl</option></select> <input type="text" id="sbPaxNum" style="width:44px"></label>
+      <label>Reiseflughöhe <select id="sbFlSel"><option value="">leer = auto</option><option>FL240</option><option>FL260</option><option>FL280</option><option>FL300</option><option>FL320</option><option>FL340</option><option>FL360</option><option>FL380</option><option>FL400</option><option>FL430</option><option>FL450</option><option value="manual">manuell …</option></select> <input type="text" id="sbFL" style="width:64px;display:none"></label>
+      <label>Cost Index <input type="text" id="sbCi" placeholder="200 / leer = auto" style="width:52px"></label>
+    </div>
+    <div class="small" style="margin-top:3px">Profil wird dauerhaft gespeichert und bei jeder SimBrief-Übergabe mitgesendet. Flugnummer fortlaufend: Zähler +1 pro Übergabe (als Routen-Zähler nutzbar); „Nächste FlNr“ setzt den Zähler direkt neu — damit lassen sich Wiederholungen bereinigen. Reiseflughöhe: Auswahl oder manuell, leer = SimBrief wählt automatisch. Passagiere: auto = SimBrief-Standardbesetzung, none = 0 Pax, Zahl = fest. Cost Index leer = SimBrief-Standard; für Charter-Betrieb realistisch: 150–250 (Standard 200 für die B736), Maximalwerte nur Medevac/Positioning.</div>
+  </div>
+  <div id="routeWrap" style="display:none">
+    <table id="routeTab" class="small"><thead id="rThead"></thead><tbody id="rTbody"></tbody></table>
+  </div>
+  <div id="pairInfo" class="small" style="margin-top:4px"></div>
+  <div id="worldWrap" style="display:none">
+    <div id="worldChain"></div>
+  </div>
+</div>
+</div>
+<div id="rightCol">
+<div class="panel" id="mapPanel">
+<canvas id="map" width="1280" height="640"></canvas>
+<div style="position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:3px">
+  <button id="mzIn" title="Zoom in" style="width:26px;padding:2px 0">+</button>
+  <button id="mzOut" title="Zoom out" style="width:26px;padding:2px 0">−</button>
+  <button id="mzReset" title="Zoom zurück" style="width:26px;padding:2px 0">⟲</button>
+</div>
+<label title="Blendet alle Flughäfen aus, die nicht auf der aktiven Route liegen — nur Anzeige, Ergebnislisten bleiben unverändert" style="position:absolute;top:8px;left:8px;display:flex;align-items:center;gap:5px;background:#0a141fd9;border:1px solid #223042;border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;z-index:5"><input type="checkbox" id="onlyRoute"> Nicht-Routen-Häfen aus</label>
+<div id="tip"></div>
+<div id="legend">
+  <span><span class="dot" style="background:#ff3b3b"></span> AI Generated <span class="dot" style="background:#4aa3ff"></span> Asobo <span class="dot" style="background:#3ddc84"></span> 3rd-Party</span>
+  <span><span class="tri" style="color:#ffd23b">▲</span> Berg (gelb) · <span class="tri" style="color:#ff3b3b">▲</span> Hochgebirge (rot)</span>
+  <span><span class="dot" style="background:#c77dff"></span> Historie geflogen</span>
+  <span id="windLeg" style="display:none">Wind FL340: <span style="color:#7f8b96">&lt;40 kt</span> · <span style="color:#4aa3ff">40–80</span> · <span style="color:#ffd23b">80–120</span> · <span style="color:#ff3b3b">&gt;120 (Jet)</span></span>
+  <span id="rainLeg" style="display:none">Regen (GPM IMERG): <span style="color:#39d0d8">grün = leicht</span> · <span style="color:#ffd23b">gelb</span> · <span style="color:#ff3b3b">rot = stark</span></span>
+  <span id="wxLeg" class="small" style="margin-left:auto"></span>
+</div>
+<div id="detail"></div>
+</div>
+
+</div>
+</div>
+
+<div id="ctrySug"></div>
+<script>
+/*__DATA__*/
+/*__GEO__*/
+'use strict';
+// ---- Indizes ----
+const IDX = {icao:0,name:1,ctry:2,lat:3,lon:4,elev:5,cat:6,rwy:7,surf:8,ils:9,papi:10,appr:11,cl:12,twr:13,atis:14,app:15,gnd:16,gates:17,ga:18,park:19,sched:20,mtn:21,magvar:22,iata:23};
+const N = AP.length;
+const byIcao = new Map(AP.map((r,i)=>[r[IDX.icao],i]));
+const RWx = RW; // rw-Detail: je ICAO Liste von Pistenarrays, evtl. + COM-Liste als letztes Element
+const SURFN = META.surfs, CATN = META.cats, COMMN = META.commsmap;
+
+// ---- Flugzeuge ----
+const mFT=3.28084, ft2m=0.3048, kmNM=0.539957;
+function fmtT(h){const mm=Math.max(0,Math.round(h*60));return Math.floor(mm/60)+':'+String(mm%60).padStart(2,'0');}
+const AC_DEF = [['Citation X',5300,5800,'C25X',470],['B737-600',4800,6400,'B736',450],['A320neo',4900,6600,'A20N',445],['CRJ-700',4100,5200,'CRJ7',445],['TBM 930',2300,2500,'TBM9',280],['HondaJet HA420',3600,4400,'HA420',420],['Vision Jet SF50',2500,3400,'SF50',300],['Longitude C700',4000,5000,'C700',470]];
+let AC = (()=>{const st=JSON.parse(localStorage.getItem('asc_ac_v3')||'null');if(!st)return AC_DEF.map(a=>a.slice());
+  const out=st.map(a=>{const d=AC_DEF.find(x=>x[0]===a[0]);return a.length>=5?a.slice():[...a,(d&&d[4])||470];});
+  AC_DEF.forEach(d=>{if(!out.some(a=>a[0]===d[0]))out.push(d.slice());});
+  return out;})();
+let acSel = localStorage.getItem('asc_acsel')||'0';
+const PKG_DEFAULT = {"AT07":2,"AYGF":2,"AYLK":2,"AYTI":2,"EDGD":2,"EDKG":3,"EGLC":3,"EGZM":2,"FXME":2,"FYVF":2,"LILN":3,"LSMI":3,"LSZC":3,"MTCA":2,"RJT1":2,"RJX7":2,"RJX8":2,"SMZO":2,"WX53":2,"YCAB":2};
+let pkgOverride = JSON.parse(localStorage.getItem('asc_pkg')||'null')||PKG_DEFAULT;
+const CONT={EU:'AL AD AT AX BE BA BG CH CY CZ DE DK EE ES FI FO FR GB GG GI GR HR HU IE IM IS IT JE LI LT LU LV MC MD ME MK MT NL NO PL PT RO RS RU SE SI SK SM SJ UA VA',AS:'AE AM AZ BD BH BN BT CN GE HK ID IL IN IQ IR JO JP KG KH KP KR KW KZ LA LB LK MM MN MO MV MY NP OM PH PK PS QA SA SG SY TJ TH TL TM TR TW UZ VN YE',AF:'AO BF BI BW CD CF CG CI CM CV DJ DZ EG ER ET GA GH GM GN GQ GW KE KM LR LS LY MA MG ML MR MU MW MZ NA NE NG RW SC SD SL SN SO SS ST SZ TD TG TN TZ UG ZA ZM ZW EH IO',NA:'AG AI AW BB BM BQ BS BZ CA CR CU CW DM DO GD GL GP GT HN HT JM KN KY LC MQ MS MX NI PA PM PR SV SX TC TT US VC VG VI BL GS',SA:'AR BO BR CL CO EC FK GF GY PE PY SR UY VE',OC:'AS AU CK FJ FM GU KI MH MP NC NF NR NU NZ PF PG PN PW SB TK TO TV VU WF WS',AN:'AQ BV HM TF'};
+const CONTSET={};for(const k in CONT)CONTSET[k]=new Set(CONT[k].split(' '));
+function contOfLL(lat,lon){   // Fallback über Grobgeoboxen für Plätze ohne Ländercode
+  if(lat<-60)return 'AN';
+  if(lat>=12&&lat<=84&&lon>=-170&&lon<=-50)return 'NA';
+  if(lat>=-57&&lat<=13&&lon>=-82&&lon<=-34)return 'SA';
+  if(lat>=34&&lat<=72&&lon>=-26&&lon<=41)return 'EU';
+  if(lat>=-36&&lat<=37&&lon>=-18&&lon<=52)return 'AF';
+  if(lon>=110&&lon<=180&&lat>=-48&&lat<=10)return 'OC';
+  return 'AS';}
+const SB_DEF={airline:'BVR',callsign:'BVR0113',fltMode:'auto',fltNum:'1103',counter:0,paxMode:'auto',paxNum:'',fl:'',ci:'200'};
+let SB=Object.assign({},SB_DEF,JSON.parse(localStorage.getItem('asc_sb_v1')||'{}'));
+window.selPair=null;
+
+// ---- Geometrie/Haversine ----
+const R=6371, D2R=Math.PI/180;
+function distKm(a,b){const dLat=(b[IDX.lat]-a[IDX.lat])*D2R,dLon=(b[IDX.lon]-a[IDX.lon])*D2R;
+  const s=Math.sin(dLat/2)**2+Math.cos(a[IDX.lat]*D2R)*Math.cos(b[IDX.lat]*D2R)*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.min(1,Math.sqrt(s)));}
+function cruiseKmh(){const a=AC[acSel];return ((a&&a[4])||470)*1.852;}   // kt → km/h
+function timeForDist(d){return (0.35+Math.max(0,d-140)/cruiseKmh())*1.10+0.25;}   // h — +10 % Route (SimBrief-Wegpunkte/Procedures), +15 min Cold & Dark pauschal
+function distForTime(t){return 140+((t-0.25)/1.10-0.35)*cruiseKmh();}             // km — Inverse dazu
+
+// ---- Filter ----
+const $=id=>document.getElementById(id);
+let sortCol=null,sortDir=1,lastFiltered=[],selected=null;
+let routeMode='off',routePairs=null,routeOrigin=null,rtTimer=null,lastCtryBad=[];
+function catOf(i){const o=pkgOverride[AP[i][IDX.icao]];if(o!==undefined)return o;return AP[i][IDX.cat]===1?0:AP[i][IDX.cat];}
+const catOfW=i=>{const c=catOf(i);return c===4?2:c;};    // AI Prio: nur für Weltumrundung wie Asobo (Wegpunkt/Bonus)
+const catName=c=>c===4?'AI Prio':(META.cats[c]||'?');    // Anzeigename; AI Prio bleibt in der Anzeige rot
+function applyFilters(){
+  const q=$('q').value.trim().toUpperCase();
+  const ctRaw=$('ctry').value.trim().split(',').map(s=>s.trim()).filter(Boolean);
+  const ct=ctRaw.map(t=>ctryResolve(t)||t.toUpperCase());
+  lastCtryBad=ctRaw.filter(t=>!ctryResolve(t));
+  const rminFt=parseFloat($('rwyMin').value), rmaxFt=parseFloat($('rwyMax').value);
+  const rmin=isNaN(rminFt)?NaN:rminFt*ft2m, rmax=isNaN(rmaxFt)?NaN:rmaxFt*ft2m;
+  const mtnMin=parseInt($('fMtnMin')&&$('fMtnMin').value,10)||0;
+  const surfSel=$('surf').value||'-1';
+  const gatesMin=parseFloat($('gatesMin').value)||0;
+  const f={twr:$('fTwr').checked,atis:$('fAtis').checked,papi:$('fPapi').checked,sched:$('fSched').checked};
+  const proc=($('fProc')&&$('fProc').value)||'any';
+  const contSel=($('cont')&&$('cont').value)||'';
+  const cats=new Set([...document.querySelectorAll('.fcat:checked')].map(e=>+e.value));
+  const out=[];
+  for(let i=0;i<N;i++){const r=AP[i];
+    if(q&&!(r[IDX.icao].includes(q)||r[IDX.name].toUpperCase().includes(q)||r[IDX.iata]===q))continue;
+    if(ct.length&&!ct.includes(r[IDX.ctry]))continue;
+    if(contSel){const cc=r[IDX.ctry];if(!CONTSET[contSel].has(cc)&&contOfLL(r[IDX.lat],r[IDX.lon])!==contSel)continue;}
+    if(!isNaN(rmin)&&r[IDX.rwy]<rmin)continue;
+    if(!isNaN(rmax)&&r[IDX.rwy]>rmax)continue;
+    const s=r[IDX.surf];
+    if(surfSel==='P'&&s>5)continue;
+    if(surfSel!=='-1'&&surfSel!=='P'&&String(s)!==surfSel)continue;
+    if(proc==='any'&&!(r[IDX.ils]||r[IDX.appr]))continue;
+    if(proc==='ils'&&!r[IDX.ils])continue;
+    if(proc==='rnav'&&!r[IDX.appr])continue;
+    if(proc==='none'&&(r[IDX.ils]||r[IDX.appr]))continue;
+    if(f.twr&&!r[IDX.twr])continue; if(f.atis&&!r[IDX.atis])continue;
+    if(f.papi&&!r[IDX.papi])continue;
+    if(mtnMin&&r[IDX.mtn]<mtnMin)continue;
+    if(f.sched&&!r[IDX.sched])continue;
+    if(r[IDX.gates]<gatesMin)continue;
+    const cw0=catOf(i);
+    const cw=routeMode==='world'?(cw0===4?2:cw0):(cw0===4?0:cw0);   // AI Prio: Weltumrundung = wie Asobo, sonst = AI
+    if(!cats.has(cw))continue;
+    out.push(i);}
+  const ch=$('catHint');
+  if(ch){let pk=null;try{pk=JSON.parse(localStorage.getItem('asc_pkg')||'null');}catch(e){}
+    const t=[];
+    if(!pk||!Object.keys(pk).length)t.push('ohne 📦 Packages-Import zählen Navigraph-überdeckte Häfen als AI Generated');
+    if(cats.has(2))t.push('Asobo-Werksplätze im Scan selten');
+    if(cats.has(3))t.push('3rd-Party nur aus importierten Packages');
+    ch.textContent=t.join(' · ');}
+  return out;
+}
+function inBand(d,b){const dlo=distForTime(b.tlo), dhi=Math.max(dlo,distForTime(b.thi));return d>=Math.min(dlo,dhi)&&d<=Math.max(dlo,dhi);}
+
+// ---- Tabelle ----
+const COLS_AP=[['ICAO',IDX.icao,'s'],['Name',IDX.name,'s'],['Land',IDX.ctry,'s'],['RWY ft',IDX.rwy,'n'],
+ ['Mtn',IDX.mtn,'m'],['TWR',IDX.twr,'b'],['ILS',IDX.ils,'b'],['RNAV',IDX.appr,'b'],['ATIS',IDX.atis,'b'],
+ ['PAPI',IDX.papi,'b'],['CL',IDX.cl,'b'],['Gates',IDX.gates,'n'],['Elev ft',IDX.elev,'n'],['Surf','surfN','s'],['IATA',IDX.iata,'s']];
+const COLS_AP_M=[['ICAO',IDX.icao,'s'],['Name',IDX.name,'s'],['RWY ft',IDX.rwy,'n'],['Mtn',IDX.mtn,'m'],['ILS',IDX.ils,'b'],['RNAV',IDX.appr,'b']];   // mobil: Kernspalten — Tabelle bleibt bildschirmbreit
+let apWasMob=null;
+function apCols(){const mob=!!(mQ&&mQ.matches);if(mob!==apWasMob){sortCol=null;apWasMob=mob;}return mob?COLS_AP_M:COLS_AP;}   // Spaltenwechsel (Drehen/Resize) → Sortierung zurücksetzen
+function acLanding(){const a=AC[acSel];return a?a[1]:0;}   // ft
+function val(i,c){const r=AP[i];
+  switch(c[1]){case 'cat':return catOf(i);case 'surfN':return (SURFN[r[IDX.surf]]||'?').slice(0,4);case 'dist':return r._d||0;case 'time':return r._t||0;default:return r[c[1]];}}
+
+function renderHead(cols){$('thead').innerHTML='<tr>'+cols.map((c,j)=>`<th data-j="${j}">${c[0]}${sortCol===j?(sortDir>0?' ▲':' ▼'):''}</th>`).join('')+'</tr>';
+ [...$('thead').querySelectorAll('th')].forEach(th=>th.onclick=()=>{const j=+th.dataset.j;
+   if(sortCol===j)sortDir*=-1;else{sortCol=j;sortDir=1;}render();});}
+function surfName(s){return SURFN[s]||'?';}
+function pairVal(p,c){switch(c[1]){case 'j':return AP[p.j][IDX.icao];case 'd':return p.d;case 't':return timeForDist(p.d);
+  case 'jrwy':return AP[p.j][IDX.rwy];case 'jmtn':return AP[p.j][IDX.mtn];case 'jils':return AP[p.j][IDX.ils];
+  case 'jcat':return catOf(p.j);case 'cat':return catOf(p.i);default:return AP[p.i][c[1]];}}
+function esc(s){return String(s).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));}
+function fmtV(c,v){const k=c[1];
+  if(k==='dist'||k==='d')return Math.round(v*kmNM)+'';
+  if(k==='time'||k==='t')return fmtT(v);
+  if(k===IDX.rwy||k==='jrwy')return Math.round(v*mFT)+'';
+  return v==null?'':v;}
+function mtnSp(v){if(!v)return '·';const c=v===3?'#ff3b3b':v===2?'#ffd23b':'#c9d4de';return `<span style="color:${c}">▲${v>1?v:''}</span>`;}   // konsistent zur Karte: 0/1 weiß, 2 gelb, 3 rot
+function cellH(v,c,warn){const t=c[2];
+  if(t==='b')return `<td>${v?'✓':'·'}</td>`;
+  if(t==='m')return `<td>${v?mtnSp(v):'·'}</td>`;
+  if(t==='k')return `<td>${catName(v)}</td>`;
+  const w=warn?' class="warnRwy"':'';
+  if(t==='n')return `<td${w}>${fmtV(c,v)}</td>`;
+  return `<td${w}>${esc(v==null?'':v)}</td>`;}
+function render(){
+  const cols=apCols();
+  let src=lastFiltered.slice();
+  if(sortCol!=null&&cols[sortCol]&&src.length>1){
+    const c=cols[sortCol];
+    const gv=r=>val(r,c);
+    src.sort((a,b)=>{const va=gv(a),vb=gv(b);
+      if(typeof va==='string'||typeof vb==='string')return String(va==null?'':va).localeCompare(String(vb==null?'':vb))*sortDir;
+      return ((va||0)-(vb||0))*sortDir;});}
+  $('count').textContent=src.length>600?`${src.length} Treffer — zeige 600`:`${src.length} Treffer`;
+  renderHead(cols);
+  const land=acLanding();
+  const shown=src.slice(0,600);
+  let h='';
+  shown.forEach(i=>{const r=AP[i],cat=catOf(i);
+    const cls=[cat===2?'kat2':cat===3?'kat3':'',selected===i?'sel':''].join(' ').trim();
+    h+=`<tr class="${cls}" data-i="${i}" style="cursor:pointer" onclick="selectAirport(${i})">`;
+    cols.forEach(c=>{const warn=land>0&&c[1]===IDX.rwy&&r[IDX.rwy]<land*ft2m;
+      h+=cellH(val(i,c),c,warn);});
+    h+='</tr>';});
+  if(!shown.length){const bad=lastCtryBad.length?` Unbekanntes Land: ${lastCtryBad.map(t=>`„${t}“`).join(', ')}.`:'';h=`<tr><td class="small" style="padding:8px">Keine Treffer — Filter lockern.${bad}</td></tr>`;}
+  $('tbody').innerHTML=h;
+  drawMap();
+  layoutHeight();
+}
+
+function update(){
+  sortCol=null;
+  lastFiltered=applyFilters();
+  render();
+  scheduleRoute();
+}
+
+// ---- Routen (live) ----
+window.sbPair=null;
+function scheduleRoute(){clearTimeout(rtTimer);rtTimer=setTimeout(routeUpdate,250);}
+let routeSort=null,routeSortDir=1;
+const RT_COLS=[['',''],['Von','i'],['',''],['Nach','j'],['nm','d'],['Zeit','t'],['RWY A','irwy'],['RWY B','jrwy'],['▲A','imtn'],['▲B','jmtn'],['ILS A','iils'],['ILS B','jils'],['RNAV A','iappr'],['RNAV B','jappr']];
+const RT_COLS_M=[['',''],['Von','i'],['',''],['Nach','j'],['nm','d'],['Zeit','t']];   // mobil: Kernspalten — Details stehen im Detail-Panel
+let rtWasMob=null;
+function rtCols(){const mob=!!(mQ&&mQ.matches);if(mob!==rtWasMob){routeSort=null;rtWasMob=mob;}return mob?RT_COLS_M:RT_COLS;}
+window.routeSortClick=(k)=>{if(routeSort===k)routeSortDir*=-1;else{routeSort=k;routeSortDir=1;}renderRoutes();};
+function renderRoutes(){
+  const wrap=$('routeWrap');
+  if(!routePairs||!routePairs.length){wrap.style.display='none';return;}
+  const cols=rtCols();
+  const full=cols===RT_COLS;
+  const list=routePairs.slice();
+  if(routeSort!=null){const key=cols[routeSort][1];
+    const gv=p=>{const a=AP[p.i],b=AP[p.j];switch(key){
+      case 'i':return a[IDX.icao];case 'j':return b[IDX.icao];case 'd':return p.d;case 't':return timeForDist(p.d);
+      case 'irwy':return a[IDX.rwy];case 'jrwy':return b[IDX.rwy];case 'imtn':return a[IDX.mtn]||0;case 'jmtn':return b[IDX.mtn]||0;
+      case 'iils':return a[IDX.ils]?1:0;case 'jils':return b[IDX.ils]?1:0;
+      case 'iappr':return a[IDX.appr]?1:0;case 'jappr':return b[IDX.appr]?1:0;}};
+    list.sort((x,y)=>{const va=gv(x),vb=gv(y);
+      if(typeof va==='string')return String(va).localeCompare(String(vb))*routeSortDir;
+      return ((va||0)-(vb||0))*routeSortDir;});}
+  $('rThead').innerHTML='<tr>'+cols.map((c,k)=>c[1]===''?'<th style="width:12px"></th>':`<th data-k="${k}" style="cursor:pointer" title="Nach ${c[0]} sortieren">${c[0]}${routeSort===k?(routeSortDir>0?' ▲':' ▼'):''}</th>`).join('')+'</tr>';
+  [...$('rThead').querySelectorAll('th')].forEach(th=>th.onclick=()=>window.routeSortClick(+th.dataset.k));
+  let h='';
+  list.forEach(p=>{const a=AP[p.i],b2=AP[p.j];
+    const active=window.selPair&&window.selPair[0]===p.i&&window.selPair[1]===p.j;
+    const flown=histKeys.size&&histKeys.has(hkey(p.i,p.j));
+    const barI=catOf(p.i)===2||catOf(p.i)===3?`<span style="display:inline-block;width:4px;height:11px;background:${catOf(p.i)===3?'#3ddc84':'#4aa3ff'};border-radius:1px"></span>`:'';
+    const barJ=catOf(p.j)===2||catOf(p.j)===3?`<span style="display:inline-block;width:4px;height:11px;background:${catOf(p.j)===3?'#3ddc84':'#4aa3ff'};border-radius:1px"></span>`:'';
+    h+=`<tr${active?' class="sel"':''} style="cursor:pointer${flown?';background:#c77dff26':''}" onclick="selectAirport(${p.j},{noMapFocus:true,noOriginFill:true});focusPair(${p.i},${p.j})">
+      <td style="width:12px;padding-left:2px">${barI}</td><td>${a[IDX.icao]}</td><td style="width:12px;padding-left:2px">${barJ}${flown?'<span style="color:#c77dff">✓</span>':''}</td><td><b style="color:#4aa3ff">${b2[IDX.icao]}</b></td>
+      <td>${Math.round(p.d*kmNM)}</td><td>${fmtT(timeForDist(p.d))}</td>`
+      +(full?`<td>${Math.round(a[IDX.rwy]*mFT)}</td><td>${Math.round(b2[IDX.rwy]*mFT)}</td>
+      <td>${mtnSp(a[IDX.mtn]||0)}</td><td>${mtnSp(b2[IDX.mtn]||0)}</td>
+      <td>${a[IDX.ils]?'✓':'·'}</td><td>${b2[IDX.ils]?'✓':'·'}</td>
+      <td>${a[IDX.appr]?'✓':'·'}</td><td>${b2[IDX.appr]?'✓':'·'}</td>`:'')+`</tr>`;});
+  $('rTbody').innerHTML=h;wrap.style.display='block';
+  layoutHeight();
+}
+function focusPair(i,j){window.selPair=[i,j];window.sbPair=[i,j];
+  const a=AP[i],b=AP[j];const[x1,y1]=px(a[IDX.lon],a[IDX.lat]),[x2,y2]=px(b[IDX.lon],b[IDX.lat]);
+  const dx=Math.max(1e-6,Math.abs(x1-x2)),dy=Math.max(1e-6,Math.abs(y1-y2));
+  zoom=Math.max(3,Math.min(400,Math.floor(0.7*Math.min(WBASE/dx,HBASE/dy))));
+  camX=(x1+x2)/2;camY=(y1+y2)/2;clampCam();
+  const dk=distKm(a,b);
+  const key=r=>`${Math.round(r[IDX.rwy]*mFT)} ft RWY · ILS ${r[IDX.ils]?'✓':'—'} · RNAV ${r[IDX.appr]?'✓':'—'} · TWR ${r[IDX.twr]?'✓':'—'} · PAPI ${r[IDX.papi]?'✓':'—'} · ${r[IDX.elev]} ft${r[IDX.mtn]?' · ▲'+r[IDX.mtn]:''}`;
+  $('pairInfo').innerHTML=`<span style="color:#4aa3ff">${a[IDX.icao]}</span> → <span style="color:#4aa3ff">${b[IDX.icao]}</span> · ${Math.round(dk*kmNM)} nm · ${fmtT(timeForDist(dk))} h — <span style="color:#4aa3ff">${a[IDX.icao]}</span>: ${key(a)} — <span style="color:#4aa3ff">${b[IDX.icao]}</span>: ${key(b)}`;
+  renderRoutes();   // aktive Zeile in der Routenliste markieren (wie Auswahl in der Airport-Liste)
+  drawMap();}
+window.focusPair=focusPair;
+
+// ---- Weltumrundung ----
+window.worldLegs=null;
+let worldOk=false,worldRollN=0,worldTries=0;
+function computeWorld(){
+  window.selPair=null;$('pairInfo').innerHTML='';
+  worldOk=false;
+  const base=lastFiltered;
+  window.worldLegs=null;
+  $('routeWrap').style.display='none';$('worldWrap').style.display='none';
+  if(base.length<3){setRi('Weltumrundung: Grundmenge zu klein — Filter lockern.');layoutHeight();return;}
+  const dur=parseFloat(String($('rDur').value).replace(',','.'))||1.5;
+  const tol=parseFloat(String($('rTol').value).replace(',','.'))||15;
+  const tlo=Math.max(0.3,dur-tol/60),thi=dur+tol/60;
+  const dLo=distForTime(tlo),dHi=distForTime(thi);
+  const dir=($('wDir').value==='west')?-1:1;
+  const avoid=new Set(($('wAvoid').value||'').trim().split(',').map(s=>s.trim()).filter(Boolean).map(t=>ctryResolve(t)||t.toUpperCase()));
+  const avoidUsed=new Map();   // Meidliste: max. 1 Etappe je Land (Lückenhüpfer für große Länder), danach Ausscheiden aus dem Pool
+  const S=new Set(base);
+  const o=$('rOrig').value.trim().toUpperCase();
+  let start=null,startOutside=false;
+  if(o){const oi=byIcao.get(o);if(oi!==undefined){start=oi;startOutside=!S.has(oi);}}
+  if(start==null){if(selected!=null&&S.has(selected))start=selected;else start=base[(Math.random()*base.length)|0];}
+  const pts=base.map(i=>({i,lat:AP[i][IDX.lat],lon:AP[i][IDX.lon]}));
+  const gain=(a,b)=>{let e=((b-a)*dir)%360;if(e<0)e+=360;return e;};
+  let cur=start,visited=new Set([start]),legs=[],sumE=0,stuck=false,closed=false;
+  for(let step=0;step<80;step++){
+    const curR=AP[cur],curLat=curR[IDX.lat],curLon=curR[IDX.lon];
+    // Früh-Schlussflug: Start liegt in Richtung <= 60° und per Direktflug (<= 1,4× Band) erreichbar
+    // → sofort schließen statt mit einer Band-Etappe über den Startmeridian hinaus nach Westen zu hüpfen
+    if(legs.length>=3){
+      const remW=gain(curLon,AP[start][IDX.lon]);
+      const dC=distKm(AP[cur],AP[start]);
+      if(remW<=60&&dC>0&&dC<=dHi*1.4){legs.push({i:cur,j:start,d:dC});closed=true;break;}
+    }
+    let pool=[],poolKind=9;
+    for(const p of pts){
+      if(visited.has(p.i))continue;
+      const pctry=AP[p.i][IDX.ctry];
+      if(avoid.has(pctry)&&(avoidUsed.get(pctry)||0)>=1)continue;
+      const e=gain(curLon,p.lon);
+      if(e<5||e>120)continue;
+      if(Math.abs(p.lat-curLat)>24)continue;
+      const d=distKm(curR,AP[p.i]);
+      let kind=-1;
+      if(d>=dLo*0.85&&d<=dHi)kind=0;          // im Zeitband
+      else if(d>60&&d<dLo*0.85)kind=1;        // kurzer Hüpfer (ok, kein Zähler)
+      else if(d<=dHi*1.9)kind=2;  // überlange Etappe: erlaubt (bis 1,9× Band), wird gezählt und ausgewiesen
+      if(kind<0)continue;
+      // Glättung: Ost-Fortschritt minus Nord-Süd-Anteil — verhindert Zickzack-Route
+      const latPen=Math.abs(p.lat-curLat)+(Math.abs(p.lat)>62?12:0);
+      const cc=catOfW(p.i);
+      const sc=e-1.5*latPen+(cc===3?10:cc===2?6:0)-(avoid.has(pctry)?60:0);   // Qualität: 3rd-Party vor Asobo vor AI; Meidliste weit nach hinten
+      if(kind<poolKind){pool=[];poolKind=kind;}
+      if(kind===poolKind)pool.push({p,d,e,kind,sc});
+    }
+    if(!pool.length){stuck=true;break;}
+    pool.sort((a,b)=>b.sc-a.sc);
+    let pick;
+    if(sumE>=300){  // Richtung Ziel: Nähe zum Start bevorzugen, Start nicht überholen
+      const sR=AP[start];
+      const remW=gain(curLon,sR[IDX.lon]);
+      const pool2=pool.slice(0,6).map(c=>{const cc2=catOfW(c.p.i);return{c,sc:c.e*3-distKm(AP[c.p.i],sR)/40-(c.e>remW+5?150:0)+(cc2===3?10:cc2===2?6:0)-(avoid.has(AP[c.p.i][IDX.ctry])?60:0)};});
+      pool2.sort((a,b)=>b.sc-a.sc);
+      pick=pool2[0].c;
+    } else pick=pool[(Math.random()*Math.min(4,pool.length))|0];
+    legs.push({i:cur,j:pick.p.i,d:pick.d});
+    const pkc=AP[pick.p.i][IDX.ctry];
+    if(avoid.has(pkc))avoidUsed.set(pkc,(avoidUsed.get(pkc)||0)+1);
+    visited.add(pick.p.i);cur=pick.p.i;sumE+=pick.e;
+    if(sumE>=355)break;
+  }
+  const dClose=cur!==start?distKm(AP[cur],AP[start]):0;
+  if(!closed&&cur!==start&&sumE>=300&&dClose<=dHi*1.4){legs.push({i:cur,j:start,d:dClose});closed=true;}
+  if(legs.length<3){setRi('Weltumrundung: keine Route gefunden — Filter lockern oder Zeit erhöhen.');layoutHeight();return;}
+  window.worldLegs=legs;
+  worldOk=closed&&!stuck;
+  const ts=legs.map(l=>timeForDist(l.d));
+  const total=ts.reduce((a,b)=>a+b,0);
+  const exc=legs.filter(l=>l.d>dHi).length;   // Ausnahmen aus der Ø-Vorgabe (inkl. Schlussflug)
+  let mi=0,ma=0;ts.forEach((t,k)=>{if(t>ts[ma])ma=k;if(t<ts[mi])mi=k;});
+  const st=legs.length+(closed?0:1);
+  setRi(`${legs.length} Flüge · ${st} Stationen · Ø ${fmtT(total/legs.length)} h/Etappe · gesamt ${fmtT(total)} h · max ${fmtT(ts[ma])} (${AP[legs[ma].i][IDX.icao]}→${AP[legs[ma].j][IDX.icao]}) · min ${fmtT(ts[mi])} · ${exc} überlang${stuck?' · Abbruch bei Lücke, Route endet vor 360°':''}${startOutside?' · Start außerhalb der Grundmenge':''}${avoid.size?` · meidet ${[...avoid].join(', ')}${avoidUsed.size?` (Lückenhüpfer: ${[...avoidUsed].join(', ')})`:''}`:''}`);
+  let chain=`<span style="color:#4aa3ff">${AP[legs[0].i][IDX.icao]}</span>`;
+  legs.forEach(l=>{chain+=` <span style="color:#ffd23b">→</span> <span style="color:#4aa3ff">${AP[l.j][IDX.icao]}</span>`;});
+  $('worldChain').innerHTML=chain;
+  $('worldWrap').style.display='block';
+  window.sbPair=[legs[0].i,legs[0].j];
+  layoutHeight();drawMap();
+}
+window.computeWorld=computeWorld;
+function worldRoll(initial){
+  if(lastFiltered.length<3){computeWorld();return;}   // Fehlermeldung: Grundmenge zu klein
+  let tries=0;
+  do{computeWorld();tries++;}while(!worldOk&&tries<15);   // unvollständige Routen überspringen, nächste komplette Umrundung zeigen
+  worldTries+=tries;
+  if(worldOk){worldRollN++;
+    $('wRollN').textContent='Roll# '+worldRollN;
+    $('wRollN').title=worldRollN+' komplette Route(n) · '+worldTries+' Versuche mit dieser Einstellung';}
+  else $('wRollN').textContent='';   // keine komplette Route in 15 Versuchen — Meldung steht in routeInfo
+}
+window.worldRoll=worldRoll;
+function worldTxt(){
+  const L=window.worldLegs;if(!L||!L.length)return'';
+  const dur=parseFloat(String($('rDur').value).replace(',','.'))||1.5;
+  const tol=parseFloat(String($('rTol').value).replace(',','.'))||15;
+  const dHi=distForTime(Math.max(0.3,dur)+tol/60);
+  const exc=L.filter(l=>l.d>dHi).length;
+  const key=r=>`${r[IDX.icao]} ${r[IDX.name]} · ${r[IDX.ctry]} · RWY ${Math.round(r[IDX.rwy]*mFT)} ft · ILS ${r[IDX.ils]?'Ja':'Nein'} · TWR ${r[IDX.twr]?'Ja':'Nein'} · PAPI ${r[IDX.papi]?'Ja':'Nein'} · Elev ${r[IDX.elev]} ft${r[IDX.mtn]?' · ▲'+r[IDX.mtn]:''}`;
+  const av=($('wAvoid').value||'').trim().split(',').map(s=>s.trim()).filter(Boolean).map(t=>ctryResolve(t)||t.toUpperCase());
+  const avLine=av.length?`Gemiedene Länder (max. 1 Etappe je Land): ${av.join(', ')}\r\n`:'';
+  let t=`MSFS Airport Scout — Weltumrundung\r\nVorgabe: Ø ${$('rDur').value} h ± ${$('rTol').value} min je Etappe · Richtung ${$('wDir').value==='west'?'West':'Ost'}\r\nAusnahmen aus der Ø-Vorgabe: ${exc} überlange Etappe(n)\r\n${avLine}\r\nRoute:\r\n${L.map(l=>AP[l.i][IDX.icao]).join(' -> ')} -> ${AP[L[L.length-1].j][IDX.icao]}\r\n\r\nEtappen:\r\n`;
+  L.forEach((l,k)=>{t+=`${String(k+1).padStart(2,'0')}. ${AP[l.i][IDX.icao]} -> ${AP[l.j][IDX.icao]} · ${Math.round(l.d*kmNM)} nm · ${fmtT(timeForDist(l.d))} h${l.d>dHi?' · ÜBERLANG':''}\r\n    A: ${key(AP[l.i])}\r\n    B: ${key(AP[l.j])}\r\n`;});
+  return t;}
+window.worldTxt=worldTxt;
+function downloadTxt(name,t){
+  try{if(typeof URL==='undefined'||!URL.createObjectURL||typeof Blob==='undefined')return false;
+    const b=new Blob([t],{type:'text/plain'});const a=document.createElement('a');
+    a.href=URL.createObjectURL(b);a.download=name;a.click();
+    setTimeout(()=>{try{URL.revokeObjectURL(a.href);}catch(e){}},5000);
+    return true;}catch(e){return false;}}
+function exportWorld(){if(!downloadTxt('weltumrundung.txt',worldTxt()))setRi('Export fehlgeschlagen.');}
+window.exportWorld=exportWorld;
+
+// ---- Layout: feste Aufteilung — ca. 60% Airport-Liste, Rest Routen ----
+function layoutHeight(){
+  const fp=$('filterPanel');
+  if(!window.innerHeight||!fp||fp.offsetHeight==null)return;
+  if(mQ&&mQ.matches){$('listWrap').style.height=Math.round(window.innerHeight*0.55)+'px';return;}   // mobil: großer Ergebnis-Bereich (~55 % des Bildschirms), der Rest der Seite scrollt nach unten
+  const avail=window.innerHeight-fp.offsetHeight-28;
+  $('listWrap').style.height=Math.max(220,Math.round(avail*0.6)-50)+'px';   // 2 Zeilen (~50 px) kürzer: Routen-Tabelle + Summary-Zeile passen ohne Scrollen
+  $('rightCol').style.top=(fp.offsetHeight+12)+'px';}
+window.layoutHeight=layoutHeight;
+// ---- Route-Filter (HQ-Route + mind. 1× Ausstattung) — wirkt nur auf Routen, nie auf Karte-Punkte/Airport-Liste ----
+function rfState(){
+  const st={hq:$('rfHQ').checked,anyFeat:false,featOk:null,hqArr:null,active:false};
+  const fc={ils:$('rfILS').checked,proc:$('rfProc').checked,twr:$('rfTWR').checked,atis:$('rfATIS').checked,papi:$('rfPAPI').checked};
+  st.anyFeat=fc.ils||fc.proc||fc.twr||fc.atis||fc.papi;
+  if(st.anyFeat){st.featOk=new Uint8Array(N);
+    for(let i=0;i<N;i++){const r=AP[i];
+      st.featOk[i]=((!fc.ils||r[IDX.ils])&&(!fc.proc||(r[IDX.ils]||r[IDX.appr]))&&(!fc.twr||r[IDX.twr])&&(!fc.atis||r[IDX.atis])&&(!fc.papi||r[IDX.papi]))?1:0;}}
+  if(st.hq){st.hqArr=new Uint8Array(N);
+    for(let i=0;i<N;i++){const c=catOf(i);st.hqArr[i]=(c===2||c===3)?1:0;}}
+  st.active=st.hq||st.anyFeat;
+  return st;}
+function rfTags(){const t=[];
+  if($('rfHQ').checked)t.push('HQ-Route');
+  const f=[];if($('rfILS').checked)f.push('ILS');if($('rfProc').checked)f.push('Verf.');if($('rfTWR').checked)f.push('TWR');if($('rfATIS').checked)f.push('ATIS');if($('rfPAPI').checked)f.push('PAPI');
+  if(f.length)t.push('1× '+f.join('+'));
+  return t;}
+function rfSave(){try{const st=JSON.parse(localStorage.getItem('asc_rt_v1')||'{}')||{};
+  st.rf={hq:$('rfHQ').checked,ils:$('rfILS').checked,proc:$('rfProc').checked,twr:$('rfTWR').checked,atis:$('rfATIS').checked,papi:$('rfPAPI').checked};
+  localStorage.setItem('asc_rt_v1',JSON.stringify(st));}catch(e){}}
+function rfLoad(){try{const st=JSON.parse(localStorage.getItem('asc_rt_v1')||'null');const f=st&&st.rf;if(!f)return;
+  if(f.hq!=null)$('rfHQ').checked=!!f.hq;if(f.ils!=null)$('rfILS').checked=!!f.ils;if(f.proc!=null)$('rfProc').checked=!!f.proc;
+  if(f.twr!=null)$('rfTWR').checked=!!f.twr;if(f.atis!=null)$('rfATIS').checked=!!f.atis;if(f.papi!=null)$('rfPAPI').checked=!!f.papi;}catch(e){}}
+window.rfState=rfState;window.rfTags=rfTags;
+function setRi(t){$('routeInfo').textContent=t;const m=$('routeInfoM');if(m)m.textContent=t;}   // Mobil: Statuszeile gespiegelt außerhalb der Routen-Klappe
+function routeUpdate(){
+  window.selPair=null;$('pairInfo').innerHTML='';
+  routeMode=$('routeMode').value;
+  ['off','from','pairs','world'].forEach(m=>{const b=$('rm'+m[0].toUpperCase()+m.slice(1));if(b&&b.classList)b.classList.toggle('act',m===routeMode);});   // Mobil: Modus-Buttons mitschalten
+  if(mQ&&mQ.matches)mRctl();   // mobil: Eingabereihe nur im aktiven Modus zeigen
+  $('rtFilterWrap').style.display=(routeMode==='pairs'||routeMode==='from')?'inline-flex':'none';
+  const rf=rfState();const rfT=rfTags();
+  const rfInfo=rfT.length?` · ${rfT.join(' · ')}`:'';
+  lastFiltered=applyFilters();   // Basis auffrischen (Kategorie-Filter ist modusabhängig: AI Prio zählt nur in der Weltumrundung als Asobo)
+  const isW=routeMode==='world';
+  $('rOrigLbl').style.display=(routeMode==='from'||isW)?'inline':'none';
+  $('rOrig').placeholder=isW?'Start (leer = automatisch)':'ICAO';
+  $('rDurLbl').textContent=isW?'Ø/Etappe':'Dauer';
+  $('wDirLbl').style.display=isW?'inline':'none';
+  $('wAvoidLbl').style.display=isW?'inline':'none';
+  $('wRoll').style.display=isW?'inline-block':'none';
+  $('wRollN').style.display=isW?'inline':'none';
+  $('wExp').style.display=isW?'inline-block':'none';
+  $('worldWrap').style.display='none';
+  $('sbBtn').style.display=routeMode==='off'?'none':'inline';
+  if(isW){routePairs=null;routeOrigin=null;worldRollN=0;worldTries=0;worldRoll(true);return;}
+  if(routeMode==='off'){routePairs=null;routeOrigin=null;window.worldLegs=null;setRi('');$('routeWrap').style.display='none';drawMap();layoutHeight();return;}
+  const base=lastFiltered;
+  const dur=parseFloat(String($('rDur').value).replace(',','.'))||1.5;
+  const tol=parseFloat(String($('rTol').value).replace(',','.'))||15;
+  const b={tlo:dur-tol/60,thi:dur+tol/60};
+  const band=`${fmtT(b.tlo)}–${fmtT(b.thi)} h · ${Math.round(distForTime(b.tlo)*kmNM)}–${Math.round(distForTime(b.thi)*kmNM)} nm`;
+  if(routeMode==='from'){
+    const o=$('rOrig').value.trim().toUpperCase();const oi=byIcao.get(o);
+    if(oi===undefined){routePairs=null;routeOrigin=null;
+      setRi('Start-ICAO unbekannt: '+esc(o));$('routeWrap').style.display='none';drawMap();return;}
+    routeOrigin=oi;const a=AP[oi];const orgCat=catOf(oi);
+    const dests=base.filter(i=>{if(i===oi)return false;
+      if(rf.anyFeat&&!(rf.featOk[oi]||rf.featOk[i]))return false;
+      if(rf.hq){const cj=catOf(i);if(cj!==2&&cj!==3)return false;if(orgCat===2&&cj!==3)return false;}   // HQ: Ziel hochwertig — von blauem Start (Asobo) nur grüne Ziele (3rd-Party)
+      const d=distKm(a,AP[i]);AP[i]._d=d;AP[i]._t=timeForDist(d);return inBand(d,b);});
+    routePairs=dests.map(i=>({i:oi,j:i,d:AP[i]._d}));
+    setRi(`${a[IDX.icao]} → ${dests.length} Ziele · ${band} · Basis ${base.length}${rfInfo}`);
+  } else {
+    routeOrigin=null;
+    if(base.length>8000){routePairs=null;
+      setRi(`Zu viele Airports für Paarsuche (${base.length}) — weiter filtern (max 8000).`);$('routeWrap').style.display='none';drawMap();return;}
+    const P=[];const L=new Float64Array(base.length),O=new Float64Array(base.length);
+    base.forEach((i,k)=>{L[k]=AP[i][IDX.lat]*D2R;O[k]=AP[i][IDX.lon]*D2R;});
+    for(let x=0;x<base.length;x++){const la1=L[x],lo1=O[x],ca=Math.cos(la1);
+      for(let y=x+1;y<base.length;y++){
+        if(rf.active){
+          if(rf.anyFeat&&!(rf.featOk[base[x]]||rf.featOk[base[y]]))continue;
+          if(rf.hq&&!(rf.hqArr[base[x]]||rf.hqArr[base[y]]))continue;}
+        const dLat=L[y]-la1,dLon=O[y]-lo1;
+        const s=Math.sin(dLat/2)**2+ca*Math.cos(L[y])*Math.sin(dLon/2)**2;
+        const d=2*R*Math.asin(Math.min(1,Math.sqrt(s)));
+        if(inBand(d,b))P.push({i:base[x],j:base[y],d});}}
+    P.sort((a1,a2)=>a1.d-a2.d);
+    routePairs=P.slice(0,400);
+    setRi(`${P.length} Paare${P.length>400?' · Top 400':''} · ${band} · Basis ${base.length}${rfInfo}`);
+  }
+  renderRoutes();
+  drawMap();
+}
+function simbriefGo(){
+  let o=null,d=null;
+  if(routeMode==='world'&&window.worldLegs&&window.worldLegs.length){
+    o=window.worldLegs[0].i;d=window.worldLegs[0].j;
+  } else if(routeMode==='from'&&routeOrigin!=null){
+    o=routeOrigin;
+    d=(selected!=null&&selected!==routeOrigin&&routePairs.some(p=>p.j===selected))?selected:(routePairs[0]?routePairs[0].j:null);
+  } else if(routeMode==='pairs'&&routePairs&&routePairs.length){
+    const sb=window.sbPair&&routePairs.find(p=>p.i===window.sbPair[0]&&p.j===window.sbPair[1]);
+    const p=sb||routePairs[0];o=p.i;d=p.j;
+  }
+  if(o==null||d==null){setRi('Keine Route für SimBrief — erst Route berechnen oder Zeile anklicken.');return;}
+  const type=(AC[acSel]||[])[3]||'C25X';
+  let u=`https://www.simbrief.com/system/dispatch.php?orig=${AP[o][IDX.icao]}&dest=${AP[d][IDX.icao]}&type=${type}`;
+  if(SB.airline)u+=`&airline=${encodeURIComponent(SB.airline)}`;
+  let fn='';if(SB.fltMode==='fix')fn=(SB.fltNum||'').trim();else fn=String(SB.counter+1);
+  if(fn)u+=`&fltnum=${encodeURIComponent(fn)}`;
+  if(SB.callsign)u+=`&callsign=${encodeURIComponent(SB.callsign)}`;
+  if(SB.paxMode==='none')u+='&pax=0';else if(SB.paxMode==='fix'&&SB.paxNum)u+=`&pax=${encodeURIComponent(SB.paxNum)}`;
+  if(SB.fl)u+=`&fl=${encodeURIComponent(SB.fl)}`;
+  if(SB.ci)u+=`&civalue=${encodeURIComponent(SB.ci)}`;
+  u+='&units=LBS';
+  window.open(u,'_blank');
+  let fno=fn;
+  if(SB.fltMode!=='fix'){SB.counter++;fno=String(SB.counter);localStorage.setItem('asc_sb_v1',JSON.stringify(SB));fillSb();}
+  setRi(`SimBrief geöffnet: ${AP[o][IDX.icao]} → ${AP[d][IDX.icao]} (${type}, Flugnummer ${fno}) — dort Generate drücken.`);
+}
+
+
+// ---- Karte (Zoom/Pan + Höhenraster) ----
+const cv=$('map'),ctx=cv.getContext('2d');
+const WBASE=1280,HBASE=640;   // Weltprojektion (equirect 2:1) — fix, unabhängig von der Canvas-Viewport-Größe
+let W=1280,H=640,MAPSC=1;     // Viewport (Canvas) — mobil dynamisch (Karte höher als breit), Desktop/Test 1280×640
+let camX=WBASE/2,camY=HBASE/2,zoom=1,dragS=null,dragMoved=false;
+function px(lon,lat){return [(lon+180)/360*WBASE,(90-lat)/180*HBASE];}
+function wrapDx(d){d=((d%WBASE)+WBASE)%WBASE;if(d>WBASE/2)d-=WBASE;return d;}   // kürzester Weg um den Globus (Längengrad-Seam)
+function clampCam(){const hh=H/2/zoom;
+  camY=Math.max(hh,Math.min(HBASE-hh,camY));camX=((camX%WBASE)+WBASE)%WBASE;}
+let demCanvas=null,demBuilt=false,demEur=null;
+function demCol(m){
+  if(m<0){const t=Math.min(1,-m/6000);return [(8+6*t)|0,(15+11*t)|0,(26+14*t)|0];}
+  if(m<100)return[30,42,34];if(m<250)return[38,50,38];if(m<500)return[47,58,42];
+  if(m<750)return[58,66,44];if(m<1000)return[70,73,46];if(m<1500)return[86,80,50];
+  if(m<2000)return[102,88,54];if(m<2500)return[120,98,58];if(m<3000)return[138,110,64];
+  if(m<3500)return[156,124,72];if(m<4000)return[174,140,84];if(m<5000)return[194,162,104];
+  return[224,214,206];}
+function buildDem(){
+  if(demBuilt)return;demBuilt=true;
+  if(typeof DEMB64!=='string')return;
+  try{
+    const bin=atob(DEMB64);const g=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++)g[i]=bin.charCodeAt(i);
+    const cnv=document.createElement('canvas');cnv.width=DEMW;cnv.height=DEMHT;
+    const c2=cnv.getContext('2d');const img=c2.createImageData(DEMW,DEMHT);const D=img.data;
+    const CELL=9280*3;   // Zellgröße ~9,3 km + Extrusion für sichtbaren Schatten
+    for(let j=0;j<DEMHT;j++){const jm=Math.max(0,j-1)*DEMW,jp=Math.min(DEMHT-1,j+1)*DEMW,jr=j*DEMW;
+      for(let i=0;i<DEMW;i++){const o=(jr+i)*4;const m=g[jr+i]*32-500;
+        const col=demCol(m);
+        if(m<0){D[o]=col[0];D[o+1]=col[1];D[o+2]=col[2];D[o+3]=255;continue;}
+        const im=Math.max(0,i-1),ip=Math.min(DEMW-1,i+1);
+        const zx=(g[jr+ip]-g[jr+im])*32/((ip-im)*CELL);
+        const zy=(g[jp+i]-g[jm+i])*32/((Math.min(DEMHT-1,j+1)-Math.max(0,j-1))*CELL);
+        const nl=Math.sqrt(zx*zx+zy*zy+1);
+        const lam=(0.6*zx+0.5*zy+0.62)/nl;   // Licht aus NW
+        const sh=Math.max(0.3,Math.min(1.35,0.5+0.85*lam));
+        D[o]=Math.min(255,col[0]*sh);D[o+1]=Math.min(255,col[1]*sh);D[o+2]=Math.min(255,col[2]*sh);D[o+3]=255;}}
+    c2.putImageData(img,0,0);demCanvas=cnv;
+  }catch(e){demCanvas=null;}
+  drawMap();
+}
+function buildDemEur(){
+  if(typeof DEMEB64!=='string')return;
+  try{
+    const bin=atob(DEMEB64);const g=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++)g[i]=bin.charCodeAt(i);
+    const cnv=document.createElement('canvas');cnv.width=DEME_W;cnv.height=DEME_H;
+    const c2=cnv.getContext('2d');const img=c2.createImageData(DEME_W,DEME_H);const D=img.data;
+    const CELL=1700*3;   // Europa-Raster ~1,7 km + Extrusion
+    for(let j=0;j<DEME_H;j++){const jm=Math.max(0,j-1)*DEME_W,jp=Math.min(DEME_H-1,j+1)*DEME_W,jr=j*DEME_W;
+      for(let i=0;i<DEME_W;i++){const o=(jr+i)*4;const m=g[jr+i]*32-500;
+        const col=demCol(m);
+        if(m<0){D[o]=col[0];D[o+1]=col[1];D[o+2]=col[2];D[o+3]=255;continue;}
+        const im=Math.max(0,i-1),ip=Math.min(DEME_W-1,i+1);
+        const zx=(g[jr+ip]-g[jr+im])*32/((ip-im)*CELL);
+        const zy=(g[jp+i]-g[jm+i])*32/((Math.min(DEME_H-1,j+1)-Math.max(0,j-1))*CELL);
+        const nl=Math.sqrt(zx*zx+zy*zy+1);
+        const lam=(0.6*zx+0.5*zy+0.62)/nl;
+        const sh=Math.max(0.3,Math.min(1.35,0.5+0.85*lam));
+        D[o]=Math.min(255,col[0]*sh);D[o+1]=Math.min(255,col[1]*sh);D[o+2]=Math.min(255,col[2]*sh);D[o+3]=255;}}
+    c2.putImageData(img,0,0);demEur=cnv;
+  }catch(e){demEur=null;}
+}
+function buildDems(){buildDem();buildDemEur();drawMap();}
+let landCv=null;
+function buildLand(){landCv=document.createElement('canvas');landCv.width=WBASE;landCv.height=HBASE;const c=landCv.getContext('2d');
+ c.fillStyle='#0a0f16';c.fillRect(0,0,WBASE,HBASE);
+ c.strokeStyle='#1c2a3a';c.lineWidth=0.5;
+ for(let lon=-150;lon<=150;lon+=30){const[x1]=px(lon,0);c.beginPath();c.moveTo(x1,0);c.lineTo(x1,HBASE);c.stroke();}
+ for(let lat=-60;lat<=90;lat+=30){const[,y1]=px(0,lat);c.beginPath();c.moveTo(0,y1);c.lineTo(WBASE,y1);c.stroke();}
+ c.fillStyle='#16222e';c.strokeStyle='#26394a';c.lineWidth=0.7;
+ LAND.forEach(ring=>{c.beginPath();ring.forEach((p,k)=>{const[x,y]=px(p[0],p[1]);k?c.lineTo(x,y):c.moveTo(x,y);});c.closePath();c.fill();c.stroke();});
+}
+function isCommRow(k){return Array.isArray(k)&&k.length>0&&k.every(p=>Array.isArray(p)&&p.length===2&&typeof p[0]==='string'&&typeof p[1]==='number');}
+function rwDetailOf(icao){return (RWx[icao]||[]).filter(k=>!isCommRow(k)&&Array.isArray(k)&&typeof k[0]==='number'&&k[0]===k[0]);}
+function rwCommsOf(icao){const out=[];(RWx[icao]||[]).forEach(k=>{if(isCommRow(k))out.push(...k);});return out;}
+function tipHtml(i){const r=AP[i];const catT=catOf(i);const CATCOL={0:'#ff3b3b',2:'#4aa3ff',3:'#3ddc84'};
+  const hdgs=rwDetailOf(r[IDX.icao]).sort((a,b)=>b[0]-a[0]).slice(0,2)
+    .map(k=>{let h=Math.round(k[1]/10)%36;if(h===0)h=36;return String(h).padStart(2,'0');}).join('/');
+  return `<div style="display:flex;justify-content:space-between;gap:14px;min-width:190px"><span style="color:#4aa3ff">${r[IDX.icao]}${r[IDX.mtn]>=2?` <span style="color:${r[IDX.mtn]===3?'#ff3b3b':'#ffd23b'}">▲</span>`:''}</span><span style="color:${CATCOL[catT]||'#ff3b3b'};font-size:10px;letter-spacing:.4px">${catName(catT)}</span></div>
+      <div style="margin-bottom:2px">${esc(r[IDX.name])}</div>
+      <div class="tl">Length: ${Math.round(r[IDX.rwy]*mFT)} ft</div>
+      <div class="tl">Pavement: ${surfName(r[IDX.surf])}</div>
+      <div class="tl">Tower: <span class="${r[IDX.twr]?'yes':'no'}">${r[IDX.twr]?'Yes':'No'}</span> · ATIS: <span class="${r[IDX.atis]?'yes':'no'}">${r[IDX.atis]?'Yes':'No'}</span></div>
+      <div class="tl">ILS: <span class="${r[IDX.ils]?'yes':'no'}">${r[IDX.ils]?'Yes':'No'}</span> · RNAV: <span class="${r[IDX.appr]?'yes':'no'}">${r[IDX.appr]?'Yes':'No'}</span></div>
+      <div class="tl">Elevation: ${r[IDX.elev]} ft</div>
+      <div class="tl">Heading: ${hdgs}</div>`;}
+function drawMap(){
+  ctx.setTransform(MAPSC,0,0,MAPSC,0,0);
+  ctx.fillStyle='#071019';ctx.fillRect(0,0,W,H);
+  ctx.save();
+  ctx.translate(W/2-camX*zoom,H/2-camY*zoom);ctx.scale(zoom,zoom);
+  const vx0=camX-W/2/zoom,vx1=camX+W/2/zoom,vy0=camY-H/2/zoom,vy1=camY+H/2/zoom;
+  const offs=[];for(let k=Math.floor(vx0/WBASE);k<=Math.ceil(vx1/WBASE);k++)offs.push(k*WBASE);   // Globus-Kopien (Endlos-Scroll)
+  const strokeLegs=(list,col,width)=>{ctx.strokeStyle=col;ctx.lineWidth=width/zoom;ctx.beginPath();
+    for(const l of list){const a=AP[l[0]],b=AP[l[1]];const[x1,y1]=px(a[IDX.lon],a[IDX.lat]),[x2,y2]=px(b[IDX.lon],b[IDX.lat]);
+      const d=wrapDx(x2-x1);
+      for(const o of offs){ctx.moveTo(x1+o,y1);ctx.lineTo(x1+o+d,y2);}}
+    ctx.stroke();};
+  if(demCanvas){for(const o of offs)ctx.drawImage(demCanvas,o,0,WBASE,HBASE);}
+  else{if(!landCv)buildLand();for(const o of offs)ctx.drawImage(landCv,o,0);}
+  if(demEur){const wPx=DEME_W*DEME_LONS*WBASE/360,hPx=DEME_H*DEME_LATS*HBASE/180;
+    const[ex,ey]=px(DEME_LON0,DEME_LAT0+DEME_H*DEME_LATS);
+    for(const o of offs)ctx.drawImage(demEur,ex+o,ey,wPx,hPx);}
+  // Ländergrenzen (schwarz, bildschirm-konstant ~1,1 px in jeder Zoomstufe — lineWidth gilt in Basis-Px, /zoom hält es auf dem Bildschirm fein; durchgehend Natural Earth 10m mit voller Koordinatenpräzision) + Orientierungsseen
+  ctx.strokeStyle='#000';
+  const HIbd=typeof BORDERS_HI!=='undefined'&&BORDERS_HI&&BORDERS_HI.length?BORDERS_HI:BORDERS;
+  ctx.lineWidth=1.1/zoom;ctx.beginPath();
+  for(const bd of HIbd){const b=bd[0],p=bd[1];const[ax,ay]=px(b[0],b[1]),[bx,by]=px(b[2],b[3]);
+    for(const o of offs){if(bx+o<vx0-1||ax+o>vx1+1||by<vy0-1||ay>vy1+1)continue;
+      let fx=null,fy=null;
+      for(let k=0;k<p.length;k+=2){const[x,y]=px(p[k],p[k+1]);
+        if(fx===null){fx=x;fy=y;ctx.moveTo(x+o,y);}else ctx.lineTo(x+o,y);}
+      fx=null;}}
+  ctx.stroke();
+  ctx.fillStyle='#0d2436';ctx.strokeStyle='#2a4f77';ctx.lineWidth=0.5/zoom;   // wie ursprünglich: dezente Umrisse, die beim Reinzoomen fein bleiben
+  for(const lk of LAKES){const b=lk[0],p=lk[1];const[ax,ay]=px(b[0],b[1]),[bx,by]=px(b[2],b[3]);
+    for(const o of offs){if(bx+o<vx0-1||ax+o>vx1+1||by<vy0-1||ay>vy1+1)continue;
+      ctx.beginPath();
+      for(let k=0;k<p.length;k+=2){const[x,y]=px(p[k],p[k+1]);if(k===0)ctx.moveTo(x+o,y);else ctx.lineTo(x+o,y);}
+      ctx.closePath();ctx.fill();ctx.stroke();}}
+  // Regen-Layer (manueller Online-Import NASA GPM IMERG — nur Regen-Pixel, Transparenz steckt im Bild)
+  if(precipImg){for(const o of offs)ctx.drawImage(precipImg,o,0,WBASE,HBASE);}
+  // Wind/Jetstream auf Flughöhe (manueller Online-Import) — ab Zoom 18 zusätzliche interpolierte Zwischenpfeile
+  if(windGrid){ctx.lineWidth=1.5/zoom;
+    const drawWindArrow=(lo,la,kt,rad,scale)=>{
+      const[wx0,wy0]=px(lo,la);
+      if(wx0<vx0-20||wx0>vx1+20||wy0<vy0-20||wy0>vy1+20)return;
+      const col=kt<40?'#7f8b96':kt<80?'#4aa3ff':kt<120?'#ffd23b':'#ff3b3b';
+      const len=Math.min(4+kt/9,16)*scale;
+      const dx=Math.sin(rad)*len,dy=-Math.cos(rad)*len,hl=Math.max(2.5,len*0.3);
+      const a1=rad+Math.PI-0.45,a2=rad+Math.PI+0.45;
+      ctx.strokeStyle=col;
+      for(const o of offs){const x=wx0+o,y=wy0;
+        ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+dx,y+dy);
+        ctx.moveTo(x+dx+Math.sin(a1)*hl,y+dy-Math.cos(a1)*hl);ctx.lineTo(x+dx,y+dy);
+        ctx.lineTo(x+dx+Math.sin(a2)*hl,y+dy-Math.cos(a2)*hl);ctx.stroke();}};
+    if(zoom>=18&&windIdx){
+      // feste 2×2-Verfeinerung: 7,5° × 5° statt 15° × 10° — 4 Pfeile wo vorher 1 war, konstante Dichte unabhängig von der Zoomstufe
+      const stepLa=7.5,stepLo=5;
+      const latTop=90-vy0*180/HBASE,latBot=90-vy1*180/HBASE;
+      const lonA=Math.max(-180,vx0*360/WBASE-180),lonB=Math.min(180,vx1*360/WBASE-180);
+      const la0=Math.ceil(Math.max(-85,latBot)/stepLa)*stepLa,la1=Math.min(85,latTop);
+      const lo0=Math.ceil(Math.max(-180,lonA)/stepLo)*stepLo,lo1=Math.min(180,lonB);
+      for(let la=la0;la<=la1;la+=stepLa){
+        for(let lo=lo0;lo<=lo1;lo+=stepLo){
+          const wp=windSub(la,lo);
+          if(wp)drawWindArrow(lo,la,wp.kt,wp.rad,0.85);}}
+    } else {
+      for(const wg of windGrid)drawWindArrow(wg.lo,wg.la,wg.sp,(wg.dir+180)*Math.PI/180,1);
+    }}
+  // adaptives Gradnetz (Längengrade wiederholen sich)
+  const step=zoom<2?30:zoom<5?10:zoom<10?5:zoom<20?2:zoom<50?1:0.5;
+  ctx.strokeStyle='#22334466';ctx.lineWidth=0.8/zoom;ctx.beginPath();
+  for(let lon=Math.ceil(-360/step)*step;lon<=720;lon+=step){const[wx]=px(lon,0);if(wx<vx0-1||wx>vx1+1)continue;ctx.moveTo(wx,vy0);ctx.lineTo(wx,vy1);}
+  for(let lat=Math.ceil(-90/step)*step;lat<=90;lat+=step){const[,wy]=px(0,lat);if(wy<vy0-1||wy>vy1+1)continue;ctx.moveTo(vx0,wy);ctx.lineTo(vx1,wy);}
+  ctx.stroke();
+  // Routenlinien (nahtumkreisend, nie quer über die Karte)
+  if(routePairs){ctx.lineWidth=1.2/zoom;ctx.strokeStyle='#4aa3ff55';ctx.beginPath();
+    if(routeOrigin!=null){const a=AP[routeOrigin];const[x1,y1]=px(a[IDX.lon],a[IDX.lat]);
+      for(const p of routePairs){const b=AP[p.j];const[x2,y2]=px(b[IDX.lon],b[IDX.lat]);
+        const d=wrapDx(x2-x1);for(const o of offs){ctx.moveTo(x1+o,y1);ctx.lineTo(x1+o+d,y2);}}}
+    else{for(const p of routePairs){const a=AP[p.i],b=AP[p.j];const[x1,y1]=px(a[IDX.lon],a[IDX.lat]),[x2,y2]=px(b[IDX.lon],b[IDX.lat]);
+        const d=wrapDx(x2-x1);for(const o of offs){ctx.moveTo(x1+o,y1);ctx.lineTo(x1+o+d,y2);}}}
+    ctx.stroke();}
+  if(window.selPair){const sp=window.selPair;const a=AP[sp[0]],b=AP[sp[1]];
+    if(a&&b)strokeLegs([sp],'#ffd23b',3);}
+  if(routeMode==='world'&&window.worldLegs)
+    strokeLegs(window.worldLegs.map(l=>[l.i,l.j]),'#ffd23b',2.5);
+  // Flughistorie: geflogene Verbindungen violett; bereits geflogene Etappen der aktiven Route dicke violette Unterlage
+  const histOn=$('histShow')&&$('histShow').checked&&histPairs.length>0;
+  if(histOn){const act=[];
+    if(window.selPair&&histKeys.has(hkey(window.selPair[0],window.selPair[1])))act.push(window.selPair);
+    if(routeMode==='world'&&window.worldLegs)window.worldLegs.forEach(l=>{if(histKeys.has(hkey(l.i,l.j)))act.push([l.i,l.j]);});
+    if(act.length)strokeLegs(act,'#c77dff',4);
+    strokeLegs(histPairs,'#c77dff',2);}
+  ctx.restore();
+  // Flughafen-Symbole (Screen-Koordinaten, wrap-aware)
+  const dotSet=new Set();lastFiltered.forEach(i=>dotSet.add(i));
+  // Airports der aktiven Route (gelbe Linie): weißer Ring, damit Stopps in der Übersicht herausstechen
+  const routeSet=new Set();
+  if(routeMode==='world'&&window.worldLegs)window.worldLegs.forEach(l=>{routeSet.add(l.i);routeSet.add(l.j);});
+  if(window.selPair){routeSet.add(window.selPair[0]);routeSet.add(window.selPair[1]);}
+  // Schalter "Nicht-Routen-Häfen aus": Häfen außerhalb der aktiven Route ausblenden (reine Anzeige)
+  const onlyRoute=$('onlyRoute')&&$('onlyRoute').checked;
+  if(onlyRoute){const keep=new Set(routeSet);
+    if(routeMode!=='world'){if(routePairs)routePairs.forEach(p=>{keep.add(p.i);keep.add(p.j);});if(routeOrigin!=null)keep.add(routeOrigin);}
+    for(const i of [...dotSet])if(!keep.has(i))dotSet.delete(i);}
+  window.mapVisible=dotSet;
+  const vis=[];
+  for(const i of dotSet){const r=AP[i];const[wx,wy]=px(r[IDX.lon],r[IDX.lat]);
+    const sx=wrapDx(wx-camX)*zoom+W/2,sy=(wy-camY)*zoom+H/2;
+    if(sx<-30||sx>W+30||sy<-30||sy>H+30)continue;vis.push([i,sx,sy]);}
+  const showSym=zoom>=30,showLbl=zoom>=23;   // Pisten-Symbole ab 30×, ICAO-Label ab 23×
+  const kmPx=40075/(WBASE*zoom);
+  for(const[i,sx,sy] of vis){
+    const cat=catOf(i),r=AP[i];
+    const col=cat===2?'#4aa3ff':cat===3?'#3ddc84':'#ff3b3b';
+    if(showSym){
+      const rws=rwDetailOf(r[IDX.icao]);const la=r[IDX.lat]*Math.PI/180;
+      const[wx,wy]=px(r[IDX.lon],r[IDX.lat]);
+      const base=wrapDx(wx-camX);
+      ctx.strokeStyle=selected===i?'#ffffff':col;ctx.lineWidth=3;
+      ctx.beginPath();
+      let had=false;
+      for(const k of rws){
+        const halfM=k[0]/2,hd=k[1]*Math.PI/180;
+        const dLat=Math.cos(hd)*halfM/111320,dLon=Math.sin(hd)*halfM/(111320*Math.cos(la));
+        let x1=(base+dLon*WBASE/360)*zoom+W/2,y1=(wy-dLat*HBASE/180-camY)*zoom+H/2;
+        let x2=(base-dLon*WBASE/360)*zoom+W/2,y2=(wy+dLat*HBASE/180-camY)*zoom+H/2;
+        const dl=Math.hypot(x2-x1,y2-y1)||1e-9;
+        if(dl<18){const f=18/dl,xc=(x1+x2)/2,yc=(y1+y2)/2;x1=xc-(xc-x1)*f;y1=yc-(yc-y1)*f;x2=xc+(x2-xc)*f;y2=yc+(y2-yc)*f;}
+        ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);had=true;}
+      if(!had){ctx.moveTo(sx,sy);ctx.lineTo(sx+3,sy+3);had=true;}
+      ctx.stroke();
+      if(routeSet.has(i)){ctx.strokeStyle='#ffffff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(sx,sy,12,0,7);ctx.stroke();}
+      ctx.fillStyle=selected===i?'#ffffff':'#c9d4de';ctx.font='13px system-ui';
+      ctx.fillText(r[IDX.icao],sx+12,sy+4);
+    } else {
+      ctx.fillStyle=col;ctx.beginPath();ctx.arc(sx,sy,selected===i?6:4,0,7);ctx.fill();
+      if(routeSet.has(i)||selected===i){ctx.strokeStyle='#ffffff';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(sx,sy,8,0,7);ctx.stroke();}
+      if(showLbl){ctx.fillStyle=selected===i?'#ffffff':'#c9d4de';ctx.font='13px system-ui';ctx.fillText(r[IDX.icao],sx+12,sy+4);}
+    }
+    if(showSym&&r[IDX.mtn]>=2){ctx.fillStyle=r[IDX.mtn]===3?'#ff3b3b':'#ffd23b';ctx.beginPath();ctx.moveTo(sx,sy-17);ctx.lineTo(sx-5.5,sy-8);ctx.lineTo(sx+5.5,sy-8);ctx.closePath();ctx.fill();}
+  }
+  // Historie: violette Ringe um alle geflogenen Häfen — auch wenn sie vom Filter/onlyRoute ausgeblendet sind
+  if(histOn){ctx.strokeStyle='#c77dff';ctx.lineWidth=1.5;
+    for(const i of histIdx){const hr=AP[i];const[wx,wy]=px(hr[IDX.lon],hr[IDX.lat]);
+      const sx=wrapDx(wx-camX)*zoom+W/2,sy=(wy-camY)*zoom+H/2;
+      if(sx<-10||sx>W+10||sy<-10||sy>H+10)continue;
+      ctx.beginPath();ctx.arc(sx,sy,6.5,0,7);ctx.stroke();}}
+// Maßstab (nm) unten links
+  const latC=(90-camY*180/HBASE)*Math.PI/180;
+  const nmPerPx=111.32*Math.cos(latC)*(360/WBASE)/zoom/1.852;
+  const nice=[1000,500,250,100,50,25,10,5].find(v=>v/nmPerPx<=180)||5;
+  const bar=nice/nmPerPx;
+  ctx.strokeStyle='#c9d4de';ctx.lineWidth=1;ctx.beginPath();
+  ctx.moveTo(12,H-14);ctx.lineTo(12+bar,H-14);ctx.moveTo(12,H-18);ctx.lineTo(12,H-10);ctx.moveTo(12+bar,H-18);ctx.lineTo(12+bar,H-10);ctx.stroke();
+  ctx.fillStyle='#c9d4de';ctx.font='10px system-ui';ctx.fillText(nice+' nm · '+Math.round(zoom)+'×',12,H-22);
+}
+cv.addEventListener('mousedown',e=>{dragS={x:e.clientX,y:e.clientY};dragMoved=false;});
+cv.addEventListener('mousemove',e=>{const rc=cv.getBoundingClientRect();
+  if(dragS&&(e.buttons&1)){const dx=(e.clientX-dragS.x)*W/rc.width,dy=(e.clientY-dragS.y)*H/rc.height;
+    if(Math.abs(dx)+Math.abs(dy)>2)dragMoved=true;
+    camX-=dx/zoom;camY-=dy/zoom;clampCam();dragS={x:e.clientX,y:e.clientY};
+    $('tip').style.display='none';drawMap();return;}
+  const mx=(e.clientX-rc.left)*W/rc.width,my=(e.clientY-rc.top)*H/rc.height;
+  let best=null,bd=100;const ds=window.mapVisible||new Set(lastFiltered);
+  for(const i of ds){const r=AP[i];const[wx,wy]=px(r[IDX.lon],r[IDX.lat]);
+    const sx=wrapDx(wx-camX)*zoom+W/2,sy=(wy-camY)*zoom+H/2;
+    const d=(sx-mx)**2+(sy-my)**2;if(d<bd){bd=d;best=i;}}
+  const tip=$('tip');
+  if(best!=null){const r=AP[best];tip.style.display='block';
+    tip.style.left=Math.min(rc.width-240,(e.clientX-rc.left)+12)+'px';tip.style.top=(e.clientY-rc.top+12)+'px';
+    tip.innerHTML=tipHtml(best);
+    cv.style.cursor='pointer';}
+  else{tip.style.display='none';cv.style.cursor='crosshair';}});
+window.addEventListener('mouseup',()=>{dragS=null;});
+cv.addEventListener('mouseleave',()=>{dragS=null;$('tip').style.display='none';});
+cv.addEventListener('wheel',e=>{e.preventDefault();
+  const rc=cv.getBoundingClientRect();
+  const mx=(e.clientX-rc.left)*W/rc.width,my=(e.clientY-rc.top)*H/rc.height;
+  const wx=camX+(mx-W/2)/zoom,wy=camY+(my-H/2)/zoom;
+  const nz=Math.max(1,Math.min(400,zoom*(e.deltaY<0?1.3:1/1.3)));
+  camX=wx-(mx-W/2)/nz;camY=wy-(my-H/2)/nz;zoom=nz;clampCam();drawMap();
+},{passive:false});
+cv.addEventListener('dblclick',e=>{e.preventDefault();
+  const rc=cv.getBoundingClientRect();
+  const mx=(e.clientX-rc.left)*W/rc.width,my=(e.clientY-rc.top)*H/rc.height;
+  const wx=camX+(mx-W/2)/zoom,wy=camY+(my-H/2)/zoom;
+  const nz=Math.min(400,zoom*2);
+  camX=wx-(mx-W/2)/nz;camY=wy-(my-H/2)/nz;zoom=nz;clampCam();drawMap();});
+cv.addEventListener('click',e=>{if(dragMoved){dragMoved=false;return;}
+  const rc=cv.getBoundingClientRect();
+  const mx=(e.clientX-rc.left)*W/rc.width,my=(e.clientY-rc.top)*H/rc.height;
+  let best=null,bd=100;const ds=window.mapVisible||new Set(lastFiltered);
+  for(const i of ds){const r=AP[i];const[wx,wy]=px(r[IDX.lon],r[IDX.lat]);
+    const sx=wrapDx(wx-camX)*zoom+W/2,sy=(wy-camY)*zoom+H/2;
+    const d=(sx-mx)**2+(sy-my)**2;if(d<bd){bd=d;best=i;}}
+  if(best!=null)selectAirport(best);});
+$('mzIn').onclick=()=>{zoom=Math.min(400,zoom*1.5);clampCam();drawMap();};
+$('mzOut').onclick=()=>{zoom=Math.max(1,zoom/1.5);clampCam();drawMap();};
+$('mzReset').onclick=()=>{zoom=1;camX=WBASE/2;camY=HBASE/2;drawMap();};
+// ---- Mobil-Klappen: Filter/Routen-Steuerung einmal setzen, dann wegklappen — Karte ist die Primärsteuerung ----
+const mQ=(typeof window.matchMedia==='function')?window.matchMedia('(max-width:900px)'):null;
+function mRctl(){const m=$('routeMode')?($('routeMode').value||'off'):'off';   // mobil: nur die Felder des aktiven Modus — im aus-Modus nur die vier Buttons
+  $('rctl').style.display=m==='off'?'none':'';}
+function mApply(){if(!mQ||!mQ.matches)return;
+  $('frows').style.display='none';
+  mRctl();}
+if(mQ){mApply();if(mQ.addEventListener)mQ.addEventListener('change',()=>{if(mQ.matches)mApply();});}
+// ---- Mobil: Karte höher als breit (wie erster Entwurf) — die Welt bleibt 1280×640, nur der Canvas-Viewport wird höher, nichts verzerrt ----
+function sizeMap(){
+  if(!mQ||!mQ.matches){W=1280;H=640;MAPSC=1;cv.width=1280;cv.height=640;return;}   // Desktop/Test: Weltformat 2:1 wie bisher
+  const rc=(typeof cv.getBoundingClientRect==='function')?cv.getBoundingClientRect():null;
+  const cssW=rc&&rc.width?Math.round(rc.width):0;
+  if(!cssW)return;   // Headless-Test ohne Layout: aktueller Zustand bleibt
+  const dpr=Math.min(2,Math.max(1,(typeof window.devicePixelRatio==='number'&&window.devicePixelRatio)||1));
+  let cssH=Math.round(((typeof window.innerHeight==='number'&&window.innerHeight)||cssW)*0.55);   // ~55 % der Viewport-Höhe
+  cssH=Math.max(Math.round(cssW*1.05),cssH);          // mindestens etwas höher als quadratisch
+  cssH=Math.min(cssH,Math.round(cssW*1.6),HBASE);     // Welt nie höher als ihr Format
+  W=cssW;H=cssH;MAPSC=dpr;
+  cv.width=cssW*dpr;cv.height=cssH*dpr;               // scharf auf Retina
+  cv.style.height=cssH+'px';
+  clampCam();}
+sizeMap();   // Init-am-Script-Ende (update→drawMap) zeichnet mit den neuen Maßen — kein drawMap hier (TDZ: precipImg & Co. sind erst später deklariert)
+if(typeof window.addEventListener==='function'){let szT=null;   // Drehen/Resize: nach 150 ms neu vermessen
+  window.addEventListener('resize',()=>{if(szT)clearTimeout(szT);szT=setTimeout(()=>{sizeMap();drawMap();},150);});}
+$('fToggle').onclick=()=>{const f=$('frows');f.style.display=f.style.display==='none'?'':'none';};
+[['off','rmOff'],['from','rmFrom'],['pairs','rmPairs'],['world','rmWorld']].forEach(p=>{   // Mobil: Modus-Auswahl direkt unter der Karte — je nach Wahl erscheinen nur dessen Felder
+  const b=$(p[1]);if(b)b.onclick=()=>{$('routeMode').value=p[0];routeUpdate();};});
+(()=>{const b=$('rmOff');if(b&&b.classList)b.classList.toggle('act',true);})();   // Startzustand: „aus" ist der aktive Modus
+// ---- Touch (iPhone/iPad): 1 Finger schiebt die Karte, 2 Finger Pinch-Zoom, Tippen wählt den Airport (Details erscheinen unter der Karte) ----
+let tPan=null,tPin=null,tTap=null;
+function cvPt(t){const rc=cv.getBoundingClientRect();return[(t.clientX-rc.left)*W/Math.max(1,rc.width||W),(t.clientY-rc.top)*H/Math.max(1,rc.height||H)];}
+cv.addEventListener('touchstart',e=>{e.preventDefault();
+  if(e.touches.length===1){const p=cvPt(e.touches[0]);tPan={x:p[0],y:p[1]};tPin=null;tTap={x:p[0],y:p[1],t:Date.now()};}
+  else if(e.touches.length===2){tPan=null;const a=cvPt(e.touches[0]),b=cvPt(e.touches[1]);
+    tPin={d:Math.hypot(b[0]-a[0],b[1]-a[1])||1,mx:(a[0]+b[0])/2,my:(a[1]+b[1])/2};}},{passive:false});
+cv.addEventListener('touchmove',e=>{e.preventDefault();
+  if(e.touches.length===1&&tPan){const p=cvPt(e.touches[0]);
+    const dx=p[0]-tPan.x,dy=p[1]-tPan.y;if((Math.abs(dx)+Math.abs(dy))>1.5)tTap=null;   // Verschieben = kein Tap
+    camX-=dx/zoom;camY-=dy/zoom;clampCam();tPan={x:p[0],y:p[1]};drawMap();}
+  else if(e.touches.length>=2&&tPin){const a=cvPt(e.touches[0]),b=cvPt(e.touches[1]);
+    const d=Math.hypot(b[0]-a[0],b[1]-a[1])||1,mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;
+    const nz=Math.max(1,Math.min(400,zoom*d/tPin.d));   // Zoom um den Mittelpunkt der Finger
+    const wx=camX+(tPin.mx-W/2)/zoom,wy=camY+(tPin.my-H/2)/zoom;
+    camX=wx-(mx-W/2)/nz;camY=wy-(my-H/2)/nz;zoom=nz;clampCam();drawMap();
+    tPin={d,mx,my};}},{passive:false});
+cv.addEventListener('touchend',e=>{e.preventDefault();
+  if(e.touches.length===0){
+    if(tTap&&Date.now()-tTap.t<400){const rc=cv.getBoundingClientRect();
+      const rad=Math.max(10,22*W/Math.max(1,rc.width||W));   // Finger-gerechter Tap-Radius (~22 CSS px)
+      tapSelect(tTap.x,tTap.y,rad*rad);}
+    tPan=null;tPin=null;tTap=null;}
+  else if(e.touches.length===1){tPan=cvPt(e.touches[0]);tPin=null;}   // Pinch endet, weiter schieben
+},{passive:false});
+function tapSelect(mx,my,rr){let best=null,bd=rr||100;const ds=window.mapVisible||new Set(lastFiltered);
+  for(const i of ds){const r=AP[i];const[wx,wy]=px(r[IDX.lon],r[IDX.lat]);
+    const sx=wrapDx(wx-camX)*zoom+W/2,sy=(wy-camY)*zoom+H/2;
+    const d=(sx-mx)**2+(sy-my)**2;if(d<bd){bd=d;best=i;}}
+  if(best!=null)selectAirport(best);}
+window.tapSelect=tapSelect;
+setTimeout(buildDems,50);
+
+// ---- Detail ----
+function selectAirport(i,opts){opts=opts||{};selected=i;
+  if(mQ&&mQ.matches){const d=$('detail');if(d&&d.scrollIntoView){try{d.scrollIntoView({behavior:'smooth',block:'nearest'});}catch(e){}}}   // mobil: Details unter der Karte einblenden
+  if(!opts.noMapFocus){const r0=AP[i];const[wx,wy]=px(r0[IDX.lon],r0[IDX.lat]);
+    if(zoom<25)zoom=30;camX=wx;camY=wy;clampCam();}
+  render();
+  const tr=$('tbody').querySelector(`tr[data-i="${i}"]`);
+  if(tr)$('listWrap').scrollTop=Math.max(0,tr.offsetTop-28);
+  if(!opts.noOriginFill){$('rOrig').value=AP[i][IDX.icao];if(routeMode==='from')scheduleRoute();}
+ const r=AP[i],rw=RWx[r[IDX.icao]]||[];
+ const rws=rwDetailOf(r[IDX.icao]);
+ const land=acLanding();const bad=land>0&&r[IDX.rwy]<land*ft2m;
+ const flagEmoji=cc=>/^[A-Z]{2}$/.test(cc)?String.fromCodePoint(...[...cc].map(ch=>127397+ch.charCodeAt(0))):'';
+ const CATCOL={0:'#ff3b3b',2:'#4aa3ff',3:'#3ddc84',4:'#ff3b3b'};
+ const catT=catOf(i);
+ const pkgImported=(r[IDX.icao] in pkgOverride);
+ const pkgSym=pkgImported?'⇩':'▣';   // ⇩ = Package-Import, ▣ = Werksscan
+ const paved=r[IDX.surf]<=5;
+ let h=`<h3 style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">`
+   +`<span><span style="color:#4aa3ff">${r[IDX.icao]}${r[IDX.iata]?'/'+r[IDX.iata]:''}</span> ${esc(r[IDX.name])} <span class="small">${r[IDX.ctry]} ${flagEmoji(r[IDX.ctry])}</span>`
+   +` <span title="Längste Piste"><b>${Math.round(r[IDX.rwy]*mFT)} ft</b> <span style="color:${paved?'#c9d4de':'#ffd23b'}">${esc(surfName(r[IDX.surf]))}</span></span>`
+   +`${r[IDX.sched]?' <span class="small">Linienverkehr</span>':''}`
+   +`${bad?` <span style="color:#ff8080" title="Piste kürzer als Landing-Minimum des gewählten Flugzeugs">⚠ ${esc(AC[acSel][0])}: Landing-Minimum ${land} ft</span>`:''}`
+   +`</span>`
+   +`<span class="small" style="white-space:nowrap"><span style="color:${CATCOL[catT]||'#ff3b3b'}">● ${catName(catT)}</span> <span title="Package-Daten: ${pkgImported?'importiert':'Scan'}">${pkgSym}</span></span>`
+   +`</h3>`;
+ const flag=(on,txt)=>`<span style="color:${on?'#3ddc84':'#ff6b6b'}">${txt} ${on?'✓':'✗'}</span>`;
+ h+=`<div style="margin-top:2px">${flag(r[IDX.ils],'ILS')} · ${flag(r[IDX.appr],'RNAV')} · ${flag(r[IDX.atis],'ATIS')} · ${flag(r[IDX.twr],'TWR')} · ${flag(r[IDX.papi],'PAPI')}${r[IDX.mtn]>=2?` · <span style="color:${r[IDX.mtn]===3?'#ff3b3b':'#ffd23b'}">▲ ${r[IDX.mtn]===3?'Hochgebirge':'Berg'}</span>`:''}</div>`;
+ const isMob=!!(mQ&&mQ.matches);   // mobil: Pistentabelle kompakt — Kernspalten statt 11, nichts läuft aus dem Bildschirm
+ if(rws.length){h+='<h4>Pisten</h4><table class="rwtab small"><tr>'+(isMob
+   ?'<th>Piste</th><th>ft</th><th>Hdg</th><th>ILS</th><th>PAPI</th>'
+   :'<th>Piste</th><th>ft</th><th>Hdg</th><th>Surface</th><th>ILS</th><th>PAPI</th><th>ApprL</th><th>CL</th><th>Edge</th><th>REIL</th><th>Gesperrt</th>')+'</tr>';
+  rws.forEach((k,idx)=>{h+=(isMob
+   ?`<tr><td>${idx+1}</td><td>${Math.round(k[0]*mFT)}</td><td>${k[1]}</td><td>${k[3]?'✓':'·'}</td><td>${k[4]?'✓':'·'}</td></tr>`
+   :`<tr><td>${idx+1}</td><td>${Math.round(k[0]*mFT)}</td><td>${k[1]}</td><td>${SURFN[k[2]]||'?'}</td><td>${k[3]?'✓':'·'}</td><td>${k[4]?'✓':'·'}</td><td>${k[5]?'✓':'·'}</td><td>${k[6]?'✓':'·'}</td><td>${k[7]?'✓':'·'}</td><td>${k[8]?'✓':'·'}</td><td>${k[9]||'·'}</td></tr>`);});h+='</table>';}
+ h+=`<div style="margin-top:6px"><button class="acc small" onclick="setOrigin('${r[IDX.icao]}')">Route ab hier</button></div>`;
+ $('detail').style.display='block';$('detail').innerHTML=h;
+}
+window.setOrigin=(icao)=>{$('routeMode').value='from';$('rOrig').value=icao;routeUpdate();$('routePanel').scrollIntoView({behavior:'smooth'});};
+window.setCam=(x,y,z)=>{if(z!==undefined)zoom=Math.max(1,Math.min(400,z));camX=x;camY=y;clampCam();};
+
+// ---- Flugzeug-Editor ----
+function fillAc(){$('acSel').innerHTML=AC.map((a,k)=>`<option value="${k}"${k==acSel?' selected':''}>${a[0]}</option>`).join('');
+  $('acInfo').textContent=AC[acSel]?`Landing ≥ ${AC[acSel][1]} ft · Cruise ${AC[acSel][4]||470} kt`:'';
+  const tb=$('acTable').querySelector('tbody');tb.innerHTML='';
+  AC.forEach((a,k)=>{const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${k==acSel?'●':''}</td><td><input value="${esc(a[0])}" data-k="${k}" data-f="0"></td><td><input type="number" value="${a[1]}" data-k="${k}" data-f="1"></td><td><input type="number" value="${a[2]}" data-k="${k}" data-f="2"></td><td><input type="number" value="${a[4]||470}" data-k="${k}" data-f="4"></td><td><input value="${esc(a[3]||'')}" data-k="${k}" data-f="3"></td><td><button class="small" style="padding:0 5px" onclick="acDelRow(${k})">✕</button></td>`;
+    tb.appendChild(tr);});}
+$('acSel').onchange=()=>{acSel=$('acSel').value;localStorage.setItem('asc_acsel',acSel);fillAc();render();};
+$('acEdit').onclick=()=>$('acPanel').classList.toggle('open');
+$('acSave').onclick=()=>{const t=$('acTable').querySelectorAll('input');
+  t.forEach(inp=>{AC[+inp.dataset.k][+inp.dataset.f]=(inp.dataset.f==='0'||inp.dataset.f==='3')?inp.value:+inp.value;});
+  localStorage.setItem('asc_ac_v3',JSON.stringify(AC));fillAc();render();};
+window.acDelRow=(k)=>{if(AC.length<=1)return;AC.splice(k,1);
+  if(acSel===k)acSel=0;else if(acSel>k)acSel--;
+  localStorage.setItem('asc_acsel',String(acSel));localStorage.setItem('asc_ac_v3',JSON.stringify(AC));
+  fillAc();render();};
+$('acAdd').onclick=()=>{AC.push(['Eigener Typ',2500,5000,'C25X',470]);
+  localStorage.setItem('asc_ac_v3',JSON.stringify(AC));fillAc();};
+
+// ---- Packages-Import ----
+$('pkgBtn').onclick=()=>$('pkgPanel').classList.toggle('open');
+$('pkgGo').onclick=()=>{const lines=$('pkgIn').value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  let found=0;const ov={...pkgOverride};
+  lines.forEach(line=>{const low=line.toLowerCase();const toks=low.split(/[-_ ]+/);
+    toks.forEach((t,k)=>{if(!/^[a-z][a-z0-9]{3}$/.test(t))return;
+    const icao=t.toUpperCase();const ii=byIcao.get(icao);if(ii===undefined)return;
+    const prev=toks[k-1]||'';const isAirport=prev.includes('airport')||k===0||low.startsWith('ed')||/scenery|airport/.test(low);
+    if(!isAirport)return;
+    const cat=low.startsWith('microsoft-')||low.startsWith('asobo-')?2:3;
+    ov[icao]=cat;found++;});});
+  pkgOverride=ov;localStorage.setItem('asc_pkg',JSON.stringify(pkgOverride));
+  $('pkgOut').textContent=`${found} Flughäfen neu klassifiziert.`;render();};
+$('pkgClr').onclick=()=>{pkgOverride={};localStorage.removeItem('asc_pkg');$('pkgOut').textContent='Import entfernt.';render();};
+
+// ---- Flughistorie (MSFS-Export) ----
+const hkey=(i,j)=>i<j?i+'-'+j:j+'-'+i;
+let histIdx=new Set(),histPairs=[],histKeys=new Set();
+(()=>{try{const st=JSON.parse(localStorage.getItem('asc_hist_v1')||'null');if(!st)return;
+  const ic=new Set(st.icaos||[]);
+  (st.legs||[]).forEach(l=>{if(AP[l[0]]&&AP[l[1]]){histPairs.push([l[0],l[1]]);histKeys.add(hkey(l[0],l[1]));ic.add(l[0]);ic.add(l[1]);}});
+  histIdx=new Set([...ic].filter(i=>AP[i]));
+  if(histPairs.length)$('histOut').textContent=histPairs.length+' Verbindungen · '+histIdx.size+' Häfen gespeichert';
+}catch(e){}})();
+window.histImport=(txt)=>{
+  const legs=new Map(),ic=new Set();let lines=0,unk=0;
+  const csvRow=s=>{const f=[];let cur='',q=false;
+    for(let i=0;i<s.length;i++){const c=s[i];
+      if(q){if(c==='"'&&s[i+1]==='"'){cur+='"';i++;}else if(c==='"'){q=false;}else cur+=c;}
+      else{if(c==='"')q=true;else if(c===','){f.push(cur);cur='';}else cur+=c;}}
+    f.push(cur);return f;};
+  const ls=String(txt).split(/\r?\n/);
+  // FlightLog-Analyzer-CSV erkennen: Kopfzeile mit "Origination Airport"/"Destination Airport" → spaltengenau lesen
+  const hdr=ls.length?csvRow(ls[0]).map(s=>s.trim().toLowerCase()):[];
+  const oi=hdr.indexOf('origination airport'),di=hdr.indexOf('destination airport');
+  const fla=oi>=0&&di>=0;
+  ls.forEach((line,li)=>{
+    if(!line.trim())return;
+    if(fla){if(li===0)return;const f=csvRow(line);
+      const o=(f[oi]||'').trim().toUpperCase(),d=(f[di]||'').trim().toUpperCase();
+      const a=byIcao.get(o),b=byIcao.get(d);
+      if(o&&a===undefined)unk++;if(d&&b===undefined)unk++;
+      if(a!==undefined)ic.add(a);if(b!==undefined)ic.add(b);
+      lines++;
+      if(a!==undefined&&b!==undefined&&a!==b){const k=hkey(a,b);if(!legs.has(k))legs.set(k,[a,b]);}
+      return;}
+    // Fallback: einfache Listen — Token-Heuristik (erste + letzte ICAO-ähnliche Zeile)
+    const toks=(line.toUpperCase().match(/[A-Z0-9]{3,4}/g)||[]).filter(t=>byIcao.has(t));
+    if(!toks.length)return;lines++;
+    const idx=toks.map(t=>byIcao.get(t));
+    idx.forEach(i=>ic.add(i));
+    if(idx.length>=2&&idx[0]!==idx[idx.length-1]){const a=idx[0],b=idx[idx.length-1],k=hkey(a,b);
+      if(!legs.has(k))legs.set(k,[a,b]);}});
+  histPairs=[...legs.values()];histKeys=new Set(histPairs.map(l=>hkey(l[0],l[1])));histIdx=new Set(ic);
+  localStorage.setItem('asc_hist_v1',JSON.stringify({icaos:[...histIdx],legs:histPairs}));
+  $('histOut').textContent=histPairs.length+' Verbindungen · '+histIdx.size+' Häfen'+(unk?' ('+unk+' ICAOs unbekannt übersprungen)':'')+' · '+lines+' Zeilen';render();
+  return{legs:histPairs.length,icaos:histIdx.size,lines,unknown:unk};};
+$('histBtn').onclick=()=>$('histPanel').classList.toggle('open');
+$('histFile').onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;
+  const rd=new FileReader();rd.onload=()=>window.histImport(rd.result);rd.readAsText(f);};
+$('histShow').onchange=()=>render();
+$('histClr').onclick=()=>{histIdx=new Set();histPairs=[];histKeys=new Set();
+  localStorage.removeItem('asc_hist_v1');$('histOut').textContent='Historie entfernt.';render();};
+
+// ---- Länder-Autocomplete (Land-Filter & Meiden): Namen eintippen, Code wird angefügt ----
+const CNS="AE|Vereinigte Arabische Emirate|United Arab Emirates;AF|Afghanistan|Afghanistan;AG|Antigua und Barbuda|Antigua and Barbuda;AI|Anguilla|Anguilla;AL|Albanien|Albania;AM|Armenien|Armenia;AN|Niederländische Antillen|Netherlands Antilles;AO|Angola|Angola;AQ|Antarktis|Antarctica;AR|Argentinien|Argentina;AS|Amerikanisch-Samoa|American Samoa;AT|Österreich|Austria;AU|Australien|Australia;AW|Aruba|Aruba;AZ|Aserbaidschan|Azerbaijan;BA|Bosnien und Herzegowina|Bosnia and Herzegovina;BB|Barbados|Barbados;BD|Bangladesch|Bangladesh;BE|Belgien|Belgium;BF|Burkina Faso|Burkina Faso;BG|Bulgarien|Bulgaria;BH|Bahrain|Bahrain;BI|Burundi|Burundi;BJ|Benin|Benin;BL|Saint-Barthélemy|Saint Barthelemy;BM|Bermuda|Bermuda;BN|Brunei|Brunei;BO|Bolivien|Bolivia;BQ|Bonaire|Bonaire;BR|Brasilien|Brazil;BS|Bahamas|Bahamas;BT|Bhutan|Bhutan;BW|Botswana|Botswana;BY|Belarus|Belarus|Weißrussland|Belorussia;BZ|Belize|Belize;CA|Kanada|Canada;CC|Kokosinseln|Cocos Islands;CD|Demokratische Republik Kongo|DR Congo|Kongo;CF|Zentralafrikanische Republik|Central African Republic;CG|Republik Kongo|Congo|Kongo;CH|Schweiz|Switzerland|Suisse|Confoederatio Helvetica;CI|Elfenbeinküste|Côte d'Ivoire|Ivory Coast|Cote d'Ivoire;CK|Cookinseln|Cook Islands;CL|Chile|Chile;CM|Kamerun|Cameroon;CN|China|China|Volksrepublik China;CO|Kolumbien|Colombia;CR|Costa Rica|Costa Rica;CU|Kuba|Cuba;CV|Kap Verde|Cabo Verde|Cape Verde;CW|Curaçao|Curacao;CX|Weihnachtsinsel|Christmas Island;CY|Zypern|Cyprus;CZ|Tschechien|Czechia|Czech Republic|Tschechische Republik;DE|Deutschland|Germany;DJ|Dschibuti|Djibouti;DK|Dänemark|Denmark;DM|Dominica|Dominica;DO|Dominikanische Republik|Dominican Republic;DZ|Algerien|Algeria;EC|Ecuador|Ecuador;EE|Estland|Estonia;EG|Ägypten|Egypt;ER|Eritrea|Eritrea;ES|Spanien|Spain;ET|Äthiopien|Ethiopia;FI|Finnland|Finland;FJ|Fidschi|Fiji;FK|Falklandinseln|Falkland Islands;FM|Mikronesien|Micronesia;FO|Färöer|Faroe Islands;FR|Frankreich|France;GA|Gabun|Gabon;GB|Vereinigtes Königreich|United Kingdom|Grossbritannien|Great Britain|Britain|England;GD|Grenada|Grenada;GE|Georgien|Georgia;GF|Französisch-Guayana|French Guiana;GG|Guernsey|Guernsey;GH|Ghana|Ghana;GI|Gibraltar|Gibraltar;GL|Grönland|Greenland;GM|Gambia|Gambia;GN|Guinea|Guinea;GP|Guadeloupe|Guadeloupe;GQ|Äquatorialguinea|Equatorial Guinea;GR|Griechenland|Greece;GT|Guatemala|Guatemala;GU|Guam|Guam;GW|Guinea-Bissau|Guinea-Bissau;GY|Guyana|Guyana;HK|Hongkong|Hong Kong;HN|Honduras|Honduras;HR|Kroatien|Croatia;HT|Haiti|Haiti;HU|Ungarn|Hungary;ID|Indonesien|Indonesia;IE|Irland|Ireland|Irische Republik|Irish Republic|Eire;IL|Israel|Israel;IM|Isle of Man|Isle of Man;IN|Indien|India;IO|Britisches Territorium im Indischen Ozean|British Indian Ocean Territory;IQ|Irak|Iraq;IR|Iran|Iran;IS|Island|Iceland;IT|Italien|Italy;JE|Jersey|Jersey;JM|Jamaika|Jamaica;JO|Jordanien|Jordan;JP|Japan|Japan;KE|Kenia|Kenya;KG|Kirgisistan|Kyrgyzstan;KH|Kambodscha|Cambodia;KI|Kiribati|Kiribati;KM|Komoren|Comoros;KN|St. Kitts und Nevis|Saint Kitts and Nevis;KP|Nordkorea|North Korea;KR|Südkorea|South Korea;KW|Kuwait|Kuwait;KY|Kaimaninseln|Cayman Islands;KZ|Kasachstan|Kazakhstan;LA|Laos|Laos;LB|Libanon|Lebanon;LC|St. Lucia|Saint Lucia;LI|Liechtenstein|Liechtenstein;LK|Sri Lanka|Sri Lanka;LR|Liberia|Liberia;LS|Lesotho|Lesotho;LT|Litauen|Lithuania;LU|Luxemburg|Luxembourg;LV|Lettland|Latvia;LY|Libyen|Libya;MA|Marokko|Morocco;MD|Moldau|Moldova;ME|Montenegro|Montenegro;MF|Saint-Martin|Saint Martin;MG|Madagaskar|Madagascar;MH|Marshallinseln|Marshall Islands;MK|Nordmazedonien|North Macedonia|Mazedonien;ML|Mali|Mali;MM|Myanmar|Myanmar|Burma;MN|Mongolei|Mongolia;MO|Macau|Macao;MP|Nördliche Marianen|Northern Mariana Islands;MQ|Martinique|Martinique;MR|Mauretanien|Mauritania;MS|Montserrat|Montserrat;MT|Malta|Malta;MU|Mauritius|Mauritius;MV|Malediven|Maldives;MW|Malawi|Malawi;MX|Mexiko|Mexico;MY|Malaysia|Malaysia;MZ|Mosambik|Mozambique;NA|Namibia|Namibia;NC|Neukaledonien|New Caledonia;NE|Niger|Niger;NF|Norfolk Island|Norfolk Island;NG|Nigeria|Nigeria;NI|Nicaragua|Nicaragua;NL|Niederlande|Netherlands|Holland;NO|Norwegen|Norway;NP|Nepal|Nepal;NR|Nauru|Nauru;NU|Niue|Niue;NZ|Neuseeland|New Zealand;OM|Oman|Oman;PA|Panama|Panama;PE|Peru|Peru;PF|Französisch-Polynesien|French Polynesia;PG|Papua-Neuguinea|Papua New Guinea;PH|Philippinen|Philippines;PK|Pakistan|Pakistan;PL|Polen|Poland;PM|Saint-Pierre und Miquelon|Saint Pierre and Miquelon;PR|Puerto Rico|Puerto Rico;PS|Palästina|Palestine|Palästinensische Gebiete;PT|Portugal|Portugal;PW|Palau|Palau;PY|Paraguay|Paraguay;QA|Katar|Qatar;RE|Réunion|Reunion;RO|Rumänien|Romania;RS|Serbien|Serbia;RU|Russland|Russia;RW|Ruanda|Rwanda;SA|Saudi-Arabien|Saudi Arabia;SB|Salomonen|Solomon Islands;SC|Seychellen|Seychelles;SD|Sudan|Sudan;SE|Schweden|Sweden;SG|Singapur|Singapore;SH|St. Helena|Saint Helena;SI|Slowenien|Slovenia;SK|Slowakei|Slovakia;SL|Sierra Leone|Sierra Leone;SM|San Marino|San Marino;SN|Senegal|Senegal;SO|Somalia|Somalia;SR|Suriname|Suriname;SS|Südsudan|South Sudan;ST|São Tomé und Príncipe|Sao Tome and Principe;SV|El Salvador|El Salvador;SX|Sint Maarten|Sint Maarten;SY|Syrien|Syria;SZ|Eswatini|Eswatini|Swasiland|Swaziland;TC|Turks- und Caicosinseln|Turks and Caicos Islands;TD|Tschad|Chad;TF|Französische Südterritorien|French Southern Territories;TG|Togo|Togo;TH|Thailand|Thailand;TJ|Tadschikistan|Tajikistan;TL|Osttimor|Timor-Leste|Timor;TM|Turkmenistan|Turkmenistan;TN|Tunesien|Tunisia;TO|Tonga|Tonga;TR|Türkei|Turkey|Türkiye;TT|Trinidad und Tobago|Trinidad and Tobago;TV|Tuvalu|Tuvalu;TW|Taiwan|Taiwan;TZ|Tansania|Tanzania;UA|Ukraine|Ukraine;UG|Uganda|Uganda;UK|Vereinigtes Königreich|United Kingdom|Grossbritannien|Great Britain|Britain|England;UM|US-Kleininseln|US Minor Outlying Islands;US|Vereinigte Staaten|United States|USA|Vereinigte Staaten von Amerika;UY|Uruguay|Uruguay;UZ|Usbekistan|Uzbekistan;VC|St. Vincent und die Grenadinen|Saint Vincent and the Grenadines;VE|Venezuela|Venezuela;VG|Britische Jungferninseln|British Virgin Islands;VI|Amerikanische Jungferninseln|US Virgin Islands;VN|Vietnam|Vietnam;VU|Vanuatu|Vanuatu;WF|Wallis und Futuna|Wallis and Futuna;WS|Samoa|Samoa;XK|Kosovo|Kosovo;YE|Jemen|Yemen;YT|Mayotte|Mayotte;ZA|Südafrika|South Africa;ZM|Sambia|Zambia;ZW|Simbabwe|Zimbabwe;ZZ|Unbekannt|Unknown";
+const CN={};CNS.split(';').forEach(s=>{const p=s.split('|');CN[p[0]]={n:p.slice(1),l:p.slice(1).map(x=>x.toLowerCase())};});
+const CTRY_CNT={};AP.forEach(r=>{const c=r[IDX.ctry];CTRY_CNT[c]=(CTRY_CNT[c]||0)+1;});
+function ctrySuggest(q){const s=String(q||'').trim().toLowerCase();
+  if(!s){const out=[];for(const code in CTRY_CNT){if(!code)continue;const e=CN[code]||{n:[code]};
+    out.push({code,de:e.n[0],en:e.n[1]||e.n[0],cnt:CTRY_CNT[code],sc:3});}
+    out.sort((a,b)=>b.cnt-a.cnt);return out.slice(0,14);}   // leeres Fragment: häufigste Länder zum Weitertippen
+  const out=[];
+  for(const code in CTRY_CNT){const e=CN[code]||{n:[code],l:[code.toLowerCase()]};let sc=-1;
+    if(code.toLowerCase().startsWith(s))sc=0;
+    else if(e.l.some(n=>n.startsWith(s)))sc=1;
+    else if(e.l.some(n=>n.includes(s)))sc=2;
+    if(sc>=0)out.push({code,de:e.n[0],en:e.n[1]||e.n[0],cnt:CTRY_CNT[code],sc});}
+  out.sort((a,b)=>a.sc-b.sc||b.cnt-a.cnt);return out.slice(0,14);}
+function ctryChain(v,code){const s=String(v||'');const ci=s.lastIndexOf(',');return (ci>=0?s.slice(0,ci+1):'')+code+',';}
+function ctryResolve(tok){const t=String(tok||'').trim();if(!t)return null;const tu=t.toLowerCase(),uc=t.toUpperCase();
+  if(CTRY_CNT[uc]!=null)return uc;   // direkt gültiger Code
+  let hits=[];
+  for(const code in CTRY_CNT){const e=CN[code]||{l:[code.toLowerCase()]};
+    if(e.l.some(n=>n===tu))hits.push(code);}
+  if(hits.length===1)return hits[0];
+  if(hits.length>1)return null;   // exakt mehrdeutig (z. B. United Kingdom = GB+UK)
+  for(const code in CTRY_CNT){const e=CN[code]||{l:[code.toLowerCase()]};
+    if(code.toLowerCase().startsWith(tu)||e.l.some(n=>n.startsWith(tu)||n.includes(tu)))hits.push(code);}
+  return hits.length===1?hits[0]:null;}   // Fragment eindeutig? → Code; sonst null (bleibt literal, Filter meldet sich)
+let ctryInp=null,ctryIdx=-1;
+function ctryHide(){const box=$('ctrySug');box.style.display='none';ctryIdx=-1;}
+function ctryShow(inp){ctryInp=inp;ctryIdx=Math.min(ctryIdx,13);const v=String(inp.value||'');const fr=v.slice(v.lastIndexOf(',')+1).trim();
+  const list=ctrySuggest(fr);const box=$('ctrySug');
+  if(!list.length){ctryHide();return;}
+  const have=new Set(String(inp.value||'').toUpperCase().split(',').map(x=>x.trim()).filter(Boolean));
+  box.innerHTML=list.map((c,i)=>`<div class="ci${i===ctryIdx?' act':''}${have.has(c.code)?' have':''}" data-c="${c.code}"><b>${c.code}</b> ${esc(c.de)}${c.en&&c.en!==c.de?` <span class="small">(${esc(c.en)})</span>`:''}<span class="small"> · ${c.cnt}</span></div>`).join('');
+  box.style.display='block';
+  if(inp.getBoundingClientRect){const r=inp.getBoundingClientRect();box.style.left=Math.max(4,Math.min(r.left,(window.innerWidth||1200)-250))+'px';box.style.top=(r.bottom+2)+'px';}}
+function ctryCommit(inp,code){inp.value=ctryChain(inp.value,code);ctryShow(inp);   // Popup offen lassen (Top-Liste) für Ketten-Eingabe
+  if(typeof inp.dispatchEvent==='function'&&typeof Event==='function')inp.dispatchEvent(new Event('input'));}
+['ctry','wAvoid'].forEach(id=>{const inp=$(id);
+  inp.addEventListener('focus',()=>ctryShow(inp));
+  inp.addEventListener('input',()=>{ctryIdx=-1;ctryShow(inp);});
+  inp.addEventListener('blur',()=>setTimeout(ctryHide,150));
+  inp.addEventListener('keydown',e=>{const box=$('ctrySug');if(box.style.display!=='block')return;
+    const v=String(inp.value||'');const fr=v.slice(v.lastIndexOf(',')+1).trim();const list=ctrySuggest(fr);
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(!list.length)return;
+      ctryIdx=(ctryIdx+(e.key==='ArrowDown'?1:-1)+list.length)%list.length;ctryShow(inp);}
+    else if(e.key==='Enter'){const c=list[ctryIdx>=0?ctryIdx:(fr?0:-1)];if(c){e.preventDefault();ctryCommit(inp,c.code);}}
+    else if(e.key==='Escape'){ctryHide();}});});
+$('ctrySug').addEventListener('mousedown',e=>{if(e.preventDefault)e.preventDefault();
+  let t=e.target;while(t&&t!==e.currentTarget){if(t.className&&String(t.className).indexOf('ci')===0&&t.getAttribute){const c=t.getAttribute('data-c');if(c&&ctryInp){ctryCommit(ctryInp,c);}return;}t=t.parentNode;}});
+window.addEventListener('scroll',e=>{if(e&&e.target&&e.target.nodeType===9)ctryHide();},true);   // nur Seiten-Scroll (document) schließt; Horizontal-Scroll des Eingabefelds nicht
+
+// ---- Wetter-Layer (manueller Online-Import, kein Auto-Update) ----
+let precipImg=null,precipBusy=false,windGrid=null,windBusy=false,windIdx=null;
+function precipSet(img){precipImg=img;$('rainLeg').style.display='inline';drawMap();}
+function precipClear(){precipImg=null;$('rainLeg').style.display='none';drawMap();}
+function buildWindIdx(){windIdx=null;if(!windGrid||windGrid.length<4)return;   // Interpolation braucht vollständige Zellen (4 Ecken)
+  const las=[...new Set(windGrid.map(w=>w.la))].sort((a,b)=>a-b);
+  const lons=[...new Set(windGrid.map(w=>w.lo))].sort((a,b)=>a-b);
+  const byKey=new Map();windGrid.forEach(w=>byKey.set(w.la+'|'+w.lo,w));
+  windIdx={las,lons,byKey};}
+function windSub(la,lo){   // bilinear zwischen Gitterpunkten (u/v-Vektoren, Richtungssprung am Nord-Süd-Durchgang sauber)
+  const {las,lons,byKey}=windIdx;
+  if(la<las[0]-0.001||la>las[las.length-1]+0.001)return null;
+  let i=0;while(i<las.length-2&&las[i+1]<=la)i++;
+  const la0=las[i],la1=las[i+1];
+  let j=0;while(j<lons.length-2&&lons[j+1]<=lo)j++;
+  const lo0=lons[j],lo1=lons[j+1];
+  const t=Math.max(0,Math.min(1,(la-la0)/((la1-la0)||1)));
+  const span=(((lo1-lo0)%360)+360)%360;
+  if(span<=0)return null;
+  let s=(((lo-lo0)%360)+360)%360/span;
+  if(s>1){if(s>1.02)return null;s=1;}
+  const c00=byKey.get(la0+'|'+lo0),c01=byKey.get(la0+'|'+lo1),c10=byKey.get(la1+'|'+lo0),c11=byKey.get(la1+'|'+lo1);
+  if(!c00||!c01||!c10||!c11)return null;
+  const uv=w=>{const rad=(w.dir+180)*Math.PI/180;return[Math.sin(rad)*w.sp,-Math.cos(rad)*w.sp];};
+  const u00=uv(c00),u01=uv(c01),u10=uv(c10),u11=uv(c11);
+  const ux=u00[0]*(1-s)*(1-t)+u01[0]*s*(1-t)+u10[0]*(1-s)*t+u11[0]*s*t;
+  const uy=u00[1]*(1-s)*(1-t)+u01[1]*s*(1-t)+u10[1]*(1-s)*t+u11[1]*s*t;
+  const kt=Math.hypot(ux,uy);
+  if(!kt)return null;
+  return{kt,rad:Math.atan2(ux,-uy)};}
+function windSet(grid){windGrid=grid;buildWindIdx();$('windLeg').style.display='inline';drawMap();}
+function windClear(){windGrid=null;windIdx=null;$('windLeg').style.display='none';drawMap();}
+window.precipSet=precipSet;window.precipClear=precipClear;window.windSet=windSet;window.windClear=windClear;
+$('precipBtn').onclick=()=>{
+  if(precipImg){precipClear();$('wxLeg').textContent='';return;}   // Toggle aus
+  if(precipBusy)return;
+  if(typeof Image!=='function'){$('wxLeg').textContent='Regen: nur online im Browser verfügbar.';return;}
+  precipBusy=true;$('precipBtn').textContent='…';
+  const tryDay=back=>{
+    const dt=new Date(Date.now()-back*864e5).toISOString().slice(0,10);
+    $('wxLeg').textContent='Regen: lade '+dt+' (NASA GPM IMERG)…';
+    const im=new Image();im.crossOrigin='anonymous';
+    im.onload=()=>{
+      try{
+        // Regenbild: nur Regen-Pixel sind gefüllt (Alpha>0), regenfreie Gebiete transparent — Deckkraft leicht dämpfen
+        const cnv=document.createElement('canvas');cnv.width=im.width;cnv.height=im.height;
+        const c2=cnv.getContext('2d');c2.drawImage(im,0,0);
+        const id=c2.getImageData(0,0,cnv.width,cnv.height);const D=id.data;
+        let lit=0;for(let k=3;k<D.length;k+=4){if(D[k]>0)lit++;}
+        if(!lit){   // Tag ohne Daten (Produktion läuft nach) → Vortag
+          if(back<5)tryDay(back+1);
+          else{precipBusy=false;$('precipBtn').textContent='☂';$('wxLeg').textContent='Regen: keine Daten der letzten Tage gefunden.';}
+          return;}
+        for(let k=3;k<D.length;k+=4){if(D[k]>0)D[k]=Math.min(D[k],195);}   // Karte bleibt lesbar unter dem Regen
+        c2.putImageData(id,0,0);
+        precipSet(cnv);precipBusy=false;$('precipBtn').textContent='☂';$('precipBtn').classList.toggle('acc',true);
+        $('wxLeg').textContent='Regen: '+dt+' (NASA GPM IMERG, kein Auto-Update)';
+      }catch(e){precipBusy=false;$('precipBtn').textContent='☂';$('wxLeg').textContent='Regen: Verarbeitung fehlgeschlagen (CORS?).';}};
+    im.onerror=()=>{precipBusy=false;$('precipBtn').textContent='☂';$('wxLeg').textContent='Regen: laden fehlgeschlagen — offline?';};
+    im.src='https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi?version=1.3.0&service=WMS&request=GetMap&format=image/png&STYLE=default&CRS=EPSG:4326&BBOX=-90,-180,90,180&WIDTH=2048&HEIGHT=1024&layers=IMERG_Precipitation_Rate&TIME='+dt;};
+  tryDay(0);};   // heute oft noch ohne Daten — Fallback auf bis zu 5 Vortage eingebaut
+$('windBtn').onclick=async()=>{
+  if(windGrid){windClear();$('wxLeg').textContent='';return;}   // Toggle aus
+  if(windBusy)return;
+  if(typeof fetch!=='function'){$('wxLeg').textContent='Wind: nur online im Browser verfügbar.';return;}
+  windBusy=true;$('windBtn').textContent='…';$('wxLeg').textContent='Wind FL340: lade (Open-Meteo GFS)…';
+  try{
+    const lats=[],lons=[];
+    for(let la=-75;la<=75;la+=15)for(let lo=-180;lo<180;lo+=10){lats.push(la);lons.push(lo);}   // 11×36=396 Punkte < API-Limit (jede Koordinate zählt als 1 Request, max 600/min)
+    const r=await fetch('https://api.open-meteo.com/v1/gfs?latitude='+lats.join(',')+'&longitude='+lons.join(',')+'&hourly=wind_speed_250hPa,wind_direction_250hPa&forecast_days=1');   // 396 Punkte < API-Limit (jede Koordinate zählt als 1 Request, max 600/min)
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    const arr=Array.isArray(d)?d:[d];
+    const now=Date.now();const grid=[];
+    for(const loc of arr){
+      const t=loc.hourly&&loc.hourly.time;if(!t)continue;
+      let bi=0,bd=1e18;
+      for(let k=0;k<t.length;k++){const dd=Math.abs(Date.parse(t[k]+':00Z')-now);if(dd<bd){bd=dd;bi=k;}}
+      const sp=loc.hourly.wind_speed_250hPa[bi]/1.852;   // km/h → kt
+      const di=loc.hourly.wind_direction_250hPa[bi];
+      if(typeof sp==='number'&&sp===sp&&typeof di==='number')grid.push({la:loc.latitude,lo:loc.longitude,sp,dir:di});}
+    if(!grid.length)throw new Error('leer');
+    windSet(grid);$('windBtn').classList.toggle('acc',true);$('wxLeg').textContent='Wind FL340 · '+grid.length+' Punkte (kein Auto-Update, ab Zoom 18× Zwischenpfeile interpoliert)';
+  }catch(e){$('wxLeg').textContent='Wind: laden fehlgeschlagen — offline?';}
+  windBusy=false;$('windBtn').textContent='➤';};
+
+// ---- Events / Init ----
+$('resetBtn').onclick=()=>{['q','ctry','rwyMin','rwyMax','gatesMin'].forEach(id=>$(id).value='');$('cont').value='';  ['fTwr','fAtis','fPapi','fSched'].forEach(id=>$(id).checked=false);
+  document.querySelectorAll('.fcat').forEach(e=>e.checked=true);$('surf').value='-1';$('fMtnMin').value='0';$('fProc').value='any';update();};
+['q','ctry','rwyMin','rwyMax','surf','gatesMin','cont'].forEach(id=>$(id).addEventListener('input',update));
+['fTwr','fAtis','fPapi','fSched'].forEach(id=>$(id).addEventListener('change',update));
+['fMtnMin','fProc'].forEach(id=>$(id).addEventListener('change',update));
+document.querySelectorAll('.fcat').forEach(e=>e.addEventListener('change',update));
+['rOrig','rDur','rTol'].forEach(id=>$(id).addEventListener('input',scheduleRoute));
+['rfHQ','rfILS','rfProc','rfTWR','rfATIS','rfPAPI'].forEach(id=>$(id).addEventListener('change',()=>{rfSave();scheduleRoute();}));
+$('routeMode').addEventListener('change',()=>{rtApply($('routeMode').value);scheduleRoute();});
+$('rtSave').onclick=()=>{const m=$('routeMode').value||'off';
+  let st={};try{st=JSON.parse(localStorage.getItem('asc_rt_v1')||'{}')||{};}catch(e){}
+  st[m]={dur:$('rDur').value,tol:$('rTol').value};
+  localStorage.setItem('asc_rt_v1',JSON.stringify(st));
+  const b=$('rtSave');b.textContent='✓';setTimeout(()=>{b.textContent='💾';},1200);};
+const rtApply=(m)=>{try{const st=JSON.parse(localStorage.getItem('asc_rt_v1')||'null');if(!st)return;
+  const v=st[m];if(v){if(v.dur!=null)$('rDur').value=v.dur;if(v.tol!=null)$('rTol').value=v.tol;}}catch(e){}};
+$('wDir').addEventListener('change',computeWorld);
+$('wAvoid').addEventListener('input',scheduleRoute);
+$('wRoll').onclick=()=>worldRoll(false);
+$('wExp').onclick=exportWorld;
+$('sbBtn').onclick=simbriefGo;
+const SB_FL=['FL240','FL260','FL280','FL300','FL320','FL340','FL360','FL380','FL400','FL430','FL450'];
+function fillSb(){$('sbAirline').value=SB.airline;$('sbCallsign').value=SB.callsign;$('sbFltMode').value=SB.fltMode;$('sbFltNum').value=SB.fltNum;
+  $('sbPaxMode').value=SB.paxMode;$('sbPaxNum').value=SB.paxNum;$('sbCi').value=SB.ci;
+  const flOpt=SB_FL.includes(SB.fl)?SB.fl:'';
+  $('sbFlSel').value=flOpt||(SB.fl?'manual':'');$('sbFL').value=flOpt?'':SB.fl;
+  $('sbFL').style.display=$('sbFlSel').value==='manual'?'inline':'none';
+  $('sbFltNum').style.display=SB.fltMode==='fix'?'inline':'none';$('sbPaxNum').style.display=SB.paxMode==='fix'?'inline':'none';
+  $('sbNextLbl').style.display=SB.fltMode==='fix'?'none':'inline';$('sbNextNum').value=String(SB.counter+1);}
+function saveSb(){SB={airline:$('sbAirline').value.trim(),callsign:$('sbCallsign').value.trim(),
+  fltMode:$('sbFltMode').value,fltNum:$('sbFltNum').value.trim(),counter:SB.counter,
+  paxMode:$('sbPaxMode').value,paxNum:$('sbPaxNum').value.trim(),
+  fl:($('sbFlSel').value==='manual'?$('sbFL').value.trim():$('sbFlSel').value),ci:$('sbCi').value.trim()};
+  localStorage.setItem('asc_sb_v1',JSON.stringify(SB));fillSb();}
+$('sbProfBtn').onclick=()=>$('sbPanel').classList.toggle('open');
+$('sbNextNum').addEventListener('input',()=>{const v=$('sbNextNum').value.trim();
+  if(!/^\d+$/.test(v)||+v<1)return;SB.counter=+v-1;localStorage.setItem('asc_sb_v1',JSON.stringify(SB));});
+['sbAirline','sbCallsign','sbFltNum','sbPaxNum','sbFL','sbCi'].forEach(id=>$(id).addEventListener('input',saveSb));
+['sbFltMode','sbPaxMode','sbFlSel'].forEach(id=>$(id).addEventListener('change',saveSb));
+window.addEventListener('resize',()=>{drawMap();layoutHeight();});
+
+// ---- Hilfe & Daten (Export/Import, manueller Flag) ----
+$('helpBtn').onclick=()=>$('helpPanel').classList.toggle('open');
+$('expBtn').onclick=()=>{
+  const dump=JSON.stringify({v:2,hinweis:'MSFS Airport Scout — Datenbestand (Packages-Kategorien, SimBrief-Profil, Flugzeuge, Route-Vorgaben)',pkg:pkgOverride,sb:SB,ac:AC,acSel:String(acSel),rt:JSON.parse(localStorage.getItem('asc_rt_v1')||'null')},null,1);
+  if(!downloadTxt('msfs_scout_daten.txt',dump))$('impOut').textContent='Export im Browser fehlgeschlagen.';};
+function importData(txt){try{
+  const d=JSON.parse(txt);
+  if(d.pkg&&typeof d.pkg==='object'){pkgOverride=d.pkg;localStorage.setItem('asc_pkg',JSON.stringify(pkgOverride));}
+  if(d.sb&&typeof d.sb==='object'){SB=Object.assign({},SB_DEF,d.sb);localStorage.setItem('asc_sb_v1',JSON.stringify(SB));}
+  if(Array.isArray(d.ac)){AC=d.ac;localStorage.setItem('asc_ac_v3',JSON.stringify(AC));}
+  if(d.acSel!=null){acSel=String(d.acSel);localStorage.setItem('asc_acsel',acSel);}
+  if(d.rt&&typeof d.rt==='object'){localStorage.setItem('asc_rt_v1',JSON.stringify(d.rt));rfLoad();
+    const v=d.rt[$('routeMode').value];if(v){if(v.dur!=null)$('rDur').value=v.dur;if(v.tol!=null)$('rTol').value=v.tol;}}
+  fillAc();fillSb();update();
+  $('impOut').textContent='Import ok.';
+  return true;
+}catch(e){$('impOut').textContent='Import fehlgeschlagen: ungültiges Format.';return false;}}
+window.importData=importData;
+$('impBtn').onclick=()=>importData($('impIn').value);
+$('impFileBtn').onclick=()=>{const f=$('impFile');if(f&&f.click)f.click();};
+$('impFile').onchange=e=>{const fl=e.target&&e.target.files&&e.target.files[0];if(!fl)return;
+  if(typeof FileReader==='undefined'){$('impOut').textContent='Datei-Import: nur im Browser verfügbar.';return;}
+  const rd=new FileReader();rd.onload=()=>{if(importData(rd.result))$('impOut').textContent='Import ok (aus Datei): '+fl.name;};
+  rd.readAsText(fl);};
+$('flagGo').onclick=()=>{
+  const ic=$('flagIcao').value.trim().toUpperCase();
+  if(!ic){$('flagOut').textContent='ICAO fehlt.';return;}
+  const ii=byIcao.get(ic);
+  if(ii===undefined){$('flagOut').textContent=ic+' unbekannt.';return;}
+  const cat=$('flagCat').value;
+  if(cat==='-1')delete pkgOverride[ic];else pkgOverride[ic]=parseInt(cat,10);
+  localStorage.setItem('asc_pkg',JSON.stringify(pkgOverride));
+  $('flagOut').textContent=ic+' → '+(cat==='-1'?'Werkseinstellung (Scan)':catName(parseInt(cat,10))+(cat==='4'?' (Anzeige rot · Weltumrundung wie Asobo)':''))+' · gespeichert.';
+  render();};
+
+fillAc();fillSb();rtApply($('routeMode').value);rfLoad();update();
+</script>
+</body>
+</html>

@@ -20,8 +20,8 @@ MSFS_Airport_Scout.html herunterladen und im Browser oeffnen (Doppelklick, file:
 
 - MSFS_Airport_Scout.html — fertige Anwendung (wird vom Build-Workflow automatisch committet, nicht manuell aendern).
 - src/template.html — Quellcode: HTML, CSS und JavaScript mit den Markern /*__DATA__*/ und /*__GEO__*/.
-- src/data/ — Datenbasis (MakeRwys-Scan, OurAirports, Hoehenraester) in 17 Teildateien, aendert sich nicht.
-- src/geo/ — Geometrien (Kuestenlinien, Laenderumrisse) in 2 Teildateien, aendert sich nicht.
+- src/data/ — Datenbasis (MakeRwys-Scan, OurAirports, Hoehenraester) in 25 Teildateien, aendert sich nicht.
+- src/geo/ — Geometrien (Kuestenlinien, Laenderumrisse) in 3 Teildateien, aendert sich nicht.
 - build.js — setzt Teildateien und Template zur Einzeldatei zusammen.
 - test_headless.js — 290 automatische Pruefungen gegen die gebaute Datei (Filter, Route, Karte, Mobile-Layout).
 - .github/workflows/build.yml — baut bei jedem Push, testet und committet die Einzeldatei als github-actions[bot].
